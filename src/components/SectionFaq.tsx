@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FAQ_DATA } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
 import { playUiClick } from '../utils/soundEffects';
 
 export const SectionFaq: React.FC = () => {
+  const { content } = useSiteContent();
+  const FAQ_DATA = content.faq;
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   const toggle = (idx: number) => {

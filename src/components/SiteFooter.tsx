@@ -3,11 +3,9 @@ import { FOOTER_COLUMNS } from '../content';
 import { playUiClick } from '../utils/soundEffects';
 import { Magnetic } from './Magnetic';
 
-interface SiteFooterProps {
-  onOpenDossier?: () => void;
-}
+interface SiteFooterProps {}
 
-export const SiteFooter: React.FC<SiteFooterProps> = ({ onOpenDossier }) => {
+export const SiteFooter: React.FC<SiteFooterProps> = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'subscribed'>('idle');
 
@@ -31,21 +29,38 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({ onOpenDossier }) => {
           {/* Brand Lockup & Newsletter Form */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#e60000] flex items-center justify-center font-display font-black text-lg text-white shadow-[0_0_15px_rgba(230,0,0,0.5)]">
-                MC
+              <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                <img
+                  src="/logo-mc-shield.png"
+                  alt="Escudo Oficial Club MC Martín Careaga - Cumpliendo Sueños"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(230,0,43,0.5)]"
+                />
               </div>
               <div>
                 <span className="font-bold font-display text-xl text-white tracking-wide block">
                   MARTÍN CAREAGA (MC)
                 </span>
-                <span className="text-xs font-mono text-neutral-500 uppercase tracking-wider">
-                  Club Atlético & Centro de Formación Integral
+                <span className="text-xs font-mono text-[#E6002B] font-bold uppercase tracking-wider block">
+                  CUMPLIENDO SUEÑOS
                 </span>
+                <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wider block">
+                  Club MC Emprender & Escuela de Fútbol Formativa
+                </span>
+                <a
+                  href="https://www.google.com/maps/place/Club+Social+y+Deportivo+Litoral/@-16.5398691,-68.100557,18z/data=!4m6!3m5!1s0x915f20d982f7e719:0x9caa6c5f5a817b92!8m2!3d-16.5405556!4d-68.1008333!16s%2Fg%2F1tdygpvq"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-mono text-[#E6002B] hover:underline flex items-center gap-1 mt-0.5"
+                >
+                  <span>📍 Complejo Deportivo Social Litoral · Bajo Següencoma</span>
+                </a>
               </div>
             </div>
 
             <p className="text-neutral-400 text-sm max-w-md font-sans">
-              Formación deportiva de alto impacto desde categorías base hasta el Primer Plantel. Proyecto competitivo FBF y BA Cup.
+              Formación deportiva de alto impacto desde categorías base hasta el Primer Plantel. Horarios: Sub 7-13 (15:00 a 16:30) y Sub 15-19 (16:30 a 18:00).
             </p>
 
             {/* Newsletter Form */}
@@ -101,25 +116,28 @@ export const SiteFooter: React.FC<SiteFooterProps> = ({ onOpenDossier }) => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-neutral-500">
+        {/* Bottom Bar: Copyright & Camilnet Developer Credit */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 text-xs font-mono text-neutral-400">
           <div>
-            © {new Date().getFullYear()} Club Atlético Martín Careaga. Todos los derechos reservados.
+            © {new Date().getFullYear()} Club MC Emprender Martín Careaga. Todos los derechos reservados.
           </div>
+
+          {/* Developer Credit with Camilnet Logo */}
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/10 hover:border-cyan-500/40 transition-colors shadow-inner">
+            <img
+              src="/logo-camilnet.png"
+              alt="Camilnet Software Developer Logo"
+              className="h-6 w-auto object-contain filter drop-shadow-[0_0_6px_rgba(0,180,216,0.3)]"
+            />
+            <div className="text-[11px] font-sans">
+              Desarrollado por <span className="font-bold text-white tracking-wide">Camilnet</span>{' '}
+              <span className="text-cyan-400 font-mono text-[10px] font-bold">SOFTWARE DEVELOPER</span>
+            </div>
+          </div>
+
           <div className="flex items-center gap-6">
             <a href="#squads" className="hover:text-white transition-colors">Aviso Legal</a>
             <a href="#faq" className="hover:text-white transition-colors">Privacidad</a>
-            {onOpenDossier && (
-              <button
-                onClick={() => {
-                  playUiClick();
-                  onOpenDossier();
-                }}
-                className="text-[#e60000] hover:underline cursor-pointer"
-              >
-                Dossier Técnico
-              </button>
-            )}
           </div>
         </div>
       </div>

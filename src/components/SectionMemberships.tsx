@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MEMBERSHIPS_DATA } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
 import { Spotlight } from './Spotlight';
 import { Magnetic } from './Magnetic';
 import { playUiClick } from '../utils/soundEffects';
 
 export const SectionMemberships: React.FC = () => {
+  const { content } = useSiteContent();
+  const MEMBERSHIPS_DATA = content.memberships;
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   return (

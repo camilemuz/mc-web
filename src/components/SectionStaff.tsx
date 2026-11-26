@@ -1,8 +1,10 @@
 import React from 'react';
-import { STAFF_DATA } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
 import { Spotlight } from './Spotlight';
 
 export const SectionStaff: React.FC = () => {
+  const { content } = useSiteContent();
+  const STAFF_DATA = content.staff;
   return (
     <section id="staff" className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
       {/* Background ambient lighting */}

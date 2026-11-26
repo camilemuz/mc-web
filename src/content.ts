@@ -21,15 +21,15 @@ export const ASSETS = {
 } as const;
 
 export const HERO = {
-  headline: ['Fútbol', 'Pasión', 'Táctica', 'Total'] as const,
-  lede: 'Preparando talentos desde la base hasta el primer plantel. Dirección técnica certificada para futsal y fútbol 11.',
+  headline: ['Fútbol', 'Pasión', 'Gloria', 'Total'] as const,
+  lede: 'Preparando talentos desde la base hasta el primer plantel. Cumpliendo Sueños con disciplina formativa, pasión y excelencia competitiva.',
   cta: 'Únete a MC',
-  badge: ['Sangre', 'Roja y', 'Negra'] as const,
+  badge: ['Cumpliendo', 'Sueños', '2026'] as const,
   learners: { value: '120+', label: 'Jugadores Activos' },
   sessions: { value: '345', label: 'partidos jugados' },
   dataPoints: { value: '18', label: 'títulos regionales' },
   avgScore: { value: '85%', label: 'victorias' },
-  insight: { kicker: 'Análisis', title: 'Táctico' },
+  insight: { kicker: 'MC Emprender', title: 'Cumpliendo Sueños' },
 } as const;
 
 export const NAV = [
@@ -42,17 +42,17 @@ export const NAV = [
 ] as const;
 
 export const DOMAINS = [
+  'Cumpliendo Sueños',
   'Futsal Indoor',
   'Fútbol 11',
-  'Preparación Física',
-  'Análisis Táctico',
+  'Alto Rendimiento',
 ] as const;
 
 export const CLAIMS = [
+  'Cumpliendo Sueños',
   'Competitivo',
-  'Táctico',
   'Formativo',
-  'Ganador',
+  'Pasión y Gloria',
 ] as const;
 
 export interface SquadItem {
@@ -210,45 +210,47 @@ export const STAFF_DATA = [
 export const MEMBERSHIPS_DATA = [
   {
     id: 'base',
-    name: 'Base (Sub 7 - Sub 11)',
-    monthly: 150,
-    annual: 1200,
-    tagline: 'Para iniciar y aprender.',
+    name: 'Escuela Base (Sub 7 - Sub 11)',
+    monthly: 200,
+    annual: 2000,
+    tagline: 'Iniciación lúdica y fundamentos.',
     features: [
-      '2 entrenamientos por semana',
-      'Futsal y motricidad',
-      'Indumentaria de práctica',
+      'Mensualidad única: 200 Bs.',
+      '¡Inscripción 0 Bs. (Gratuita)!',
+      'Horarios: 15:00 a 16:30 (Complejo Litoral)',
+      'Futsal indoor y psicomotricidad',
     ],
-    cta: 'Inscribirse',
+    cta: 'Inscribirse (0 Bs)',
     featured: false,
   },
   {
     id: 'formativo',
-    name: 'Formativo (Sub 13 - Sub 17)',
+    name: 'Formativa & Juveniles (Sub 13 - Sub 19)',
     monthly: 200,
-    annual: 1800,
-    tagline: 'Desarrollo y torneos.',
+    annual: 2000,
+    tagline: 'Desarrollo competitivo y torneos.',
     features: [
-      '3 entrenamientos por semana',
-      'Futsal y Fútbol 11',
-      'Convocatoria a partidos',
+      'Mensualidad única: 200 Bs.',
+      '¡Inscripción 0 Bs. (Gratuita)!',
+      'Horarios: 16:30 a 18:00 (Complejo Litoral)',
+      'Fútbol 11 y Futsal competitivo',
     ],
-    cta: 'Inscribirse',
+    cta: 'Inscribirse (0 Bs)',
     featured: true,
   },
   {
     id: 'elite',
-    name: 'Proyección y 1er Plantel',
-    monthly: 300,
-    annual: 2800,
-    tagline: 'Rendimiento absoluto.',
+    name: 'Primer Plantel & Proyección',
+    monthly: 200,
+    annual: 2000,
+    tagline: 'Alto rendimiento y competencia oficial.',
     features: [
-      'Entrenamiento intensivo',
-      'Preparación táctica FBF',
-      'Proyecto BA Cup',
-      'Análisis de rendimiento',
+      'Mensualidad única: 200 Bs.',
+      '¡Inscripción 0 Bs. (Gratuita)!',
+      'Preparación táctica avanzada FBF',
+      'Competencia en Liga y proyección',
     ],
-    cta: 'Postular',
+    cta: 'Postular al Plantel',
     featured: false,
   },
 ];

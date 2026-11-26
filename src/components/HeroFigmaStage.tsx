@@ -1,169 +1,641 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'motion/react';
-import { HERO, ASSETS } from '../content';
-import { playUiClick } from '../utils/soundEffects';
+import { ASSETS } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
+import { playUiClick, playGoalCheer, playWhoosh } from '../utils/soundEffects';
+import { Shield, Sparkles, ChevronLeft, ChevronRight, Zap, Trophy, Volume2, VolumeX, ArrowUpRight } from 'lucide-react';
 
 interface HeroFigmaStageProps {
   onOpenStore?: () => void;
-  onOpenDossier?: () => void;
 }
 
-export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) => {
-  // EFFECT-02: matchMedia fork with mounted gate
-  const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+interface StarPlayer {
+  id: string;
+  name: string;
+  nickname: string;
+  number: number;
+  position: string;
+  category: string;
+  ovr: number;
+  role: string;
+  image: string;
+  accent: string;
+  stats: {
+    ritmo: number;
+    tiro: number;
+    pase: number;
+    regated: number;
+    defensa: number;
+    fisico: number;
+  };
+}
 
-  // EFFECT-06: still-film handover (01 / 02 pager)
-  const [activeMedia, setActiveMedia] = useState<'still' | 'film'>('still');
+const STAR_PLAYERS: StarPlayer[] = [
+  {
+    id: 'p-2',
+    name: 'Lucas Benítez',
+    nickname: 'El Mago',
+    number: 10,
+    position: 'Mediocampista',
+    category: 'Primer Plantel',
+    ovr: 94,
+    role: 'Capitán & Creador',
+    accent: '#E6002B',
+    image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
+    stats: { ritmo: 89, tiro: 92, pase: 97, regated: 94, defensa: 72, fisico: 86 }
+  },
+  {
+    id: 'p-1',
+    name: 'Mateo Valenzuela',
+    nickname: 'El Rayo',
+    number: 9,
+    position: 'Delantero',
+    category: 'Primer Plantel',
+    ovr: 93,
+    role: 'Goleador Implacable',
+    accent: '#FF3355',
+    image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=80',
+    stats: { ritmo: 96, tiro: 95, pase: 84, regated: 90, defensa: 45, fisico: 91 }
+  },
+  {
+    id: 'p-3',
+    name: 'Joaquín Navarro',
+    nickname: 'El Muro',
+    number: 2,
+    position: 'Defensa',
+    category: 'Primer Plantel',
+    ovr: 91,
+    role: 'Líder de Zaga',
+    accent: '#3B82F6',
+    image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=800&q=80',
+    stats: { ritmo: 85, tiro: 62, pase: 84, regated: 79, defensa: 95, fisico: 94 }
+  },
+  {
+    id: 'p-4',
+    name: 'Tomás Herrera',
+    nickname: 'San Tomás',
+    number: 1,
+    position: 'Arquero',
+    category: 'Primer Plantel',
+    ovr: 92,
+    role: 'Cerrojo del Arco',
+    accent: '#E6002B',
+    image: 'https://images.unsplash.com/photo-1543351611-58f69d7c1781?auto=format&fit=crop&w=800&q=80',
+    stats: { ritmo: 87, tiro: 40, pase: 86, regated: 83, defensa: 96, fisico: 89 }
+  }
+];
+
+export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) => {
+  const { content } = useSiteContent();
+  const HERO = content.hero;
+  const [mounted, setMounted] = useState(false);
+  
+  // Interactive Mode Selector: 'players3d' | 'shield3d' | 'film'
+  const [showcaseMode, setShowcaseMode] = useState<'players3d' | 'shield3d' | 'film'>('players3d');
+  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
+  const [isCardHovered, setIsCardHovered] = useState(false);
+  const [isShieldHovered, setIsShieldHovered] = useState(false);
+  const [shieldBurst, setShieldBurst] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+
+  // 3D Card mouse tilt physics
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, px: 50, py: 50 });
+  const [shieldTilt, setShieldTilt] = useState({ rx: 0, ry: 0 });
+
   const videoRef = useRef<HTMLVideoElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const heroPlayers = content.heroPlayers && content.heroPlayers.length > 0 ? content.heroPlayers : STAR_PLAYERS;
+  const activePlayer = heroPlayers[currentPlayerIdx] || heroPlayers[0] || STAR_PLAYERS[0];
 
   useEffect(() => {
     setMounted(true);
-    const mql = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mql.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Handover logic: When returning to still, write currentTime to 0 once
-  const handleToggleMedia = (mode: 'still' | 'film') => {
-    playUiClick();
-    if (mode === 'still' && videoRef.current) {
-      videoRef.current.currentTime = 0;
-    }
-    setActiveMedia(mode);
+  // Parallax subtle depth planes
+  const { scrollY } = useScroll();
+  const rawBgY = useTransform(scrollY, [0, 800], [0, 120]);
+  const rawMediaY = useTransform(scrollY, [0, 800], [0, -60]);
+  const rawTextY = useTransform(scrollY, [0, 800], [0, -30]);
+
+  const springConfig = { stiffness: 140, damping: 25, mass: 0.8 };
+  const bgY = useSpring(rawBgY, springConfig);
+  const mediaY = useSpring(rawMediaY, springConfig);
+  const textY = useSpring(rawTextY, springConfig);
+
+  // Auto-advance player every 7 seconds when not hovered and in players3d mode
+  useEffect(() => {
+    if (showcaseMode !== 'players3d' || isCardHovered) return;
+    const interval = setInterval(() => {
+      setCurrentPlayerIdx((prev) => (prev + 1) % heroPlayers.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [showcaseMode, isCardHovered, heroPlayers.length]);
+
+  const handlePrevPlayer = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    playWhoosh();
+    setCurrentPlayerIdx((prev) => (prev === 0 ? heroPlayers.length - 1 : prev - 1));
   };
 
-  // EFFECT-03: hero-scroll-parallax (five spring-smoothed depth planes)
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollY } = useScroll();
+  const handleNextPlayer = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    playWhoosh();
+    setCurrentPlayerIdx((prev) => (prev + 1) % heroPlayers.length);
+  };
 
-  // 5 depth planes (rates: plane 1 slowest -> plane 5 fastest)
-  const rawY1 = useTransform(scrollY, [0, 800], [0, -40]);
-  const rawY2 = useTransform(scrollY, [0, 800], [0, -90]);
-  const rawY3 = useTransform(scrollY, [0, 800], [0, -150]);
-  const rawY4 = useTransform(scrollY, [0, 800], [0, -220]);
-  const rawY5 = useTransform(scrollY, [0, 800], [0, -300]);
+  const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
 
-  const springConfig = { stiffness: 180, damping: 28, mass: 0.8 };
-  const plane1Y = useSpring(rawY1, springConfig);
-  const plane2Y = useSpring(rawY2, springConfig);
-  const plane3Y = useSpring(rawY3, springConfig);
-  const plane4Y = useSpring(rawY4, springConfig);
-  const plane5Y = useSpring(rawY5, springConfig);
+    const rx = ((y - cy) / cy) * -14;
+    const ry = ((x - cx) / cx) * 14;
+    const px = (x / rect.width) * 100;
+    const py = (y / rect.height) * 100;
+
+    setTilt({ rx, ry, px, py });
+  };
+
+  const handleShieldMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    const rx = ((y - cy) / cy) * -18;
+    const ry = ((x - cx) / cx) * 18;
+    setShieldTilt({ rx, ry });
+  };
+
+  const handleShieldClick = () => {
+    playGoalCheer();
+    setShieldBurst(true);
+    setTimeout(() => setShieldBurst(false), 900);
+  };
+
+  const scrollToRoster = () => {
+    playUiClick();
+    const el = document.getElementById('plantilla');
+    el?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   if (!mounted) {
-    return <section className="h-svh bg-[#0a0a0a] flex items-center justify-center" />;
+    return <section className="min-h-screen bg-[#060608] flex items-center justify-center" />;
   }
-
-  // EFFECT-01: One --u design-pixel scalar derived from whichever axis runs out first
-  // Desktop canvas: 1440 x 810 (ar: 16/9 = 1.77777, cols: 1440)
-  // Mobile canvas: 440 x 956 (ar: 440/956 = 0.46025, cols: 440)
-  const stageCols = isMobile ? 440 : 1440;
-  const stageAr = isMobile ? '440 / 956' : '1440 / 810';
 
   return (
     <section
       ref={heroRef}
       id="home"
-      className="relative h-svh w-full flex items-center justify-center overflow-hidden bg-[#0a0a0a] select-none"
-      style={
-        {
-          '--stage-cols': stageCols,
-          '--stage-ar': stageAr,
-        } as React.CSSProperties
-      }
+      aria-label="Portada Principal y Presentación Oficial Club MC"
+      className="relative min-h-screen w-full flex flex-col justify-center pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-24 overflow-hidden bg-[#060608] select-none"
     >
-      <div className="stage-frame w-full h-full flex items-center justify-center">
-        <div className="stage">
-          {/* PLANE 1 (Deepest): Arc, Glow, and Stadium backdrop */}
-          <motion.div
-            style={{ y: plane1Y }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            {/* Ambient Red Glow */}
-            <div
-              className="absolute rounded-full blur-[120px] pointer-events-none"
-              style={{
-                left: `calc(720 * var(--u))`,
-                top: `calc(405 * var(--u))`,
-                width: isMobile ? `calc(320 * var(--u))` : `calc(680 * var(--u))`,
-                height: isMobile ? `calc(320 * var(--u))` : `calc(680 * var(--u))`,
-                transform: 'translate(-50%, -50%)',
-                backgroundColor: 'rgba(204, 0, 0, 0.22)',
-              }}
-            />
+      {/* Background Watermark & Atmospheric Glows */}
+      <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Ambient Red Glow Beams */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] lg:w-[950px] h-[450px] lg:h-[650px] bg-[#E6002B]/18 rounded-full blur-[150px]" />
+        <div className="absolute top-1/4 right-10 w-[450px] h-[450px] bg-red-950/25 rounded-full blur-[130px]" />
+        <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-[#E6002B]/10 rounded-full blur-[110px]" />
 
-            {/* Blurred "Careaga" background flourish watermark */}
-            <div
-              className="absolute font-black tracking-tighter uppercase font-display pointer-events-none select-none text-center"
-              style={{
-                left: isMobile ? `calc(220 * var(--u))` : `calc(720 * var(--u))`,
-                top: isMobile ? `calc(420 * var(--u))` : `calc(360 * var(--u))`,
-                transform: 'translate(-50%, -50%)',
-                fontSize: isMobile ? `calc(84 * var(--u))` : `calc(200 * var(--u))`,
-                color: 'transparent',
-                backgroundImage: 'linear-gradient(180deg, rgba(230,0,0,0.2) 0%, rgba(204,0,0,0.02) 100%)',
-                WebkitBackgroundClip: 'text',
-                filter: 'blur(2px)',
-                opacity: 0.6,
-                width: '100%',
-              }}
+        {/* Cyber Carbon Grid Texture */}
+        <div className="absolute inset-0 carbon-grid opacity-25" />
+
+        {/* Giant Athletic Typography Watermark: Slogan & Brand - Stacked & Scaled to never clip letters */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.04]">
+          <span className="font-extrabold uppercase font-display italic tracking-widest text-[11vw] sm:text-[9vw] leading-[0.8] text-white">
+            ALIMENTANDO
+          </span>
+          <span className="font-extrabold uppercase font-display italic tracking-widest text-[11vw] sm:text-[9vw] leading-[0.8] text-[#E6002B]">
+            SUEÑOS
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Main Content Grid: 12 Columns */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
+        
+        {/* Left Column: Athletic Typography, Official Slogan, Lede & CTA */}
+        <motion.div
+          style={{ y: textY }}
+          className="lg:col-span-7 flex flex-col justify-center space-y-6 sm:space-y-7"
+        >
+          {/* Top Athletic Kicker with Slogan - Clear clearance below navbar */}
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/75 border border-white/20 text-xs font-mono text-neutral-200 w-fit backdrop-blur-md shadow-lg shadow-black/60 mb-1"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[#E6002B] animate-pulse" aria-hidden="true" />
+            <span className="text-[#FF2E50] font-bold tracking-wider uppercase font-mono">
+              MC Emprender
+            </span>
+            <span className="text-neutral-500">·</span>
+            <span className="text-white font-extrabold tracking-wide">ALIMENTANDO SUEÑOS</span>
+            <span className="text-neutral-500 hidden sm:inline">·</span>
+            <span className="text-neutral-300 hidden sm:inline">Temporada 2026/27</span>
+          </motion.div>
+
+          {/* Primary High-Impact Athletic Headline */}
+          <div className="space-y-0 leading-none">
+            <h1 className="font-extrabold uppercase font-display italic text-5xl sm:text-7xl md:text-8xl xl:text-9xl flex flex-col leading-[0.88] tracking-tight">
+              {HERO.headline.map((word, idx) => {
+                const lower = word.toLowerCase();
+                const isHighlight =
+                  lower.includes('pasion') ||
+                  lower.includes('pasión') ||
+                  lower.includes('gloria') ||
+                  lower.includes('sueños') ||
+                  lower.includes('suenos');
+
+                let colorClass = 'text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]';
+                if (lower.includes('pasion') || lower.includes('pasión') || idx === 1) {
+                  colorClass = 'text-transparent bg-clip-text bg-gradient-to-r from-[#FF2E50] via-[#E6002B] to-[#B3001E] drop-shadow-[0_0_40px_rgba(230,0,43,0.7)]';
+                } else if (lower.includes('gloria') || lower.includes('sueños') || lower.includes('suenos') || idx === 2) {
+                  colorClass = 'text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-300 drop-shadow-[0_4px_24px_rgba(255,255,255,0.4)]';
+                }
+
+                return (
+                  <motion.span
+                    key={`${word}-${idx}`}
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.65,
+                      delay: 0.08 * (idx + 1),
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className={colorClass}
+                  >
+                    {word}
+                  </motion.span>
+                );
+              })}
+            </h1>
+          </div>
+
+          {/* Lede Explanatory Narrative */}
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.45 }}
+            className="text-base sm:text-lg lg:text-xl text-neutral-200 font-sans leading-relaxed max-w-xl font-normal"
+          >
+            {HERO.lede}
+          </motion.p>
+
+          {/* CTA Actions & Club Slogan Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.55 }}
+            className="flex flex-wrap items-center gap-4 pt-1"
+          >
+            <a
+              href="#squads"
+              onClick={playUiClick}
+              aria-label="Conocer categorías y unirse al Club MC"
+              className="px-7 py-3.5 bg-[#E6002B] hover:bg-[#FF1A40] text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all shadow-[0_0_35px_rgba(230,0,43,0.5)] hover:shadow-[0_0_45px_rgba(230,0,43,0.7)] flex items-center gap-2.5 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              Careaga
+              <span>{HERO.cta}</span>
+              <svg
+                className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+
+            {onOpenStore && (
+              <button
+                onClick={() => {
+                  playUiClick();
+                  onOpenStore();
+                }}
+                aria-label="Ir a la tienda oficial 3D del Club MC"
+                className="px-6 py-3.5 bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+              >
+                <span>Tienda Oficial</span>
+              </button>
+            )}
+
+            <div className="border-l border-white/25 pl-4 py-1 flex flex-col justify-center">
+              <span className="text-white font-extrabold tracking-wide font-display text-sm leading-tight flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#E6002B] animate-pulse" />
+                <span>ALIIMENTANDO SUEÑOS</span>
+              </span>
+              <span className="text-[11px] text-neutral-300 font-mono tracking-wider uppercase mt-0.5">
+                Formación & Primer Plantel
+              </span>
             </div>
           </motion.div>
 
-          {/* PLANE 2: Rotating Dashed Ring & Optical Centre Media (Stadium Still / Film Video) */}
+          {/* Social Proof & Metrics Strip */}
           <motion.div
-            style={{ y: plane2Y }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.65 }}
+            className="flex flex-wrap items-center gap-4 pt-3 border-t border-white/10"
           >
+            {/* Learners Card */}
+            <div className="glass px-4 py-2.5 rounded-2xl border border-white/15 bg-black/60 backdrop-blur-md flex items-center gap-3 shadow-lg shadow-black/50">
+              <div className="flex -space-x-2">
+                {ASSETS.img.avatars.slice(0, 3).map((av, idx) => (
+                  <img
+                    key={idx}
+                    src={av}
+                    alt={`Jugador formado en Escuela MC ${idx + 1}`}
+                    width={28}
+                    height={28}
+                    className="w-7 h-7 rounded-full border-2 border-black object-cover"
+                  />
+                ))}
+              </div>
+              <div>
+                <span className="font-extrabold font-display text-white text-base block leading-none">
+                  {HERO.learners.value}
+                </span>
+                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                  {HERO.learners.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Regional Titles & Matches Card */}
+            <div className="glass px-4 py-2.5 rounded-2xl border border-white/15 bg-black/60 backdrop-blur-md flex items-center gap-4 shadow-lg shadow-black/50">
+              <div>
+                <span className="font-extrabold font-display text-white text-base block leading-none">
+                  {HERO.sessions.value}
+                </span>
+                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                  {HERO.sessions.label}
+                </span>
+              </div>
+              <div className="h-6 w-[1px] bg-white/20" aria-hidden="true" />
+              <div>
+                <span className="font-extrabold font-display text-[#FF2E50] text-base block leading-none">
+                  {HERO.dataPoints.value}
+                </span>
+                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                  {HERO.dataPoints.label}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Right Column: High-Impact 3D Showcase (Escudo 3D / Cracks en Aumento / Film Estadio) */}
+        <motion.div
+          style={{ y: mediaY }}
+          className="lg:col-span-5 flex flex-col items-center justify-center relative mt-6 lg:mt-0"
+        >
+          {/* Main 3D Container Stage Frame */}
+          <div className="relative w-[320px] h-[360px] sm:w-[420px] sm:h-[450px] md:w-[460px] md:h-[480px] lg:w-[470px] lg:h-[500px] xl:w-[520px] xl:h-[540px] flex items-center justify-center">
+            
+            {/* EFFECT 1: Layered Neon Red Flare & Ambient Aura */}
+            <div className="absolute -inset-10 sm:-inset-14 rounded-full bg-gradient-to-tr from-[#E6002B]/45 via-[#E6002B]/20 to-transparent blur-[75px] pointer-events-none animate-pulse" />
+            <div className="absolute -inset-16 rounded-full bg-[#E6002B]/15 blur-[100px] pointer-events-none" />
+
+            {/* EFFECT 2: Live Conic Sweep Light Radar */}
             <div
-              className="relative flex items-center justify-center"
+              className="absolute -inset-6 sm:-inset-8 rounded-full pointer-events-none animate-[spin_10s_linear_infinite] opacity-60"
               style={{
-                left: isMobile ? `calc(220 * var(--u))` : `calc(860 * var(--u))`,
-                top: isMobile ? `calc(480 * var(--u))` : `calc(405 * var(--u))`,
-                transform: 'translate(-50%, -50%)',
-                width: isMobile ? `calc(340 * var(--u))` : `calc(520 * var(--u))`,
-                height: isMobile ? `calc(340 * var(--u))` : `calc(520 * var(--u))`,
+                background:
+                  'conic-gradient(from 0deg, transparent 0deg, rgba(230,0,43,0) 50deg, rgba(230,0,43,0.7) 110deg, transparent 140deg)',
+                filter: 'blur(3px)',
               }}
-            >
-              {/* Outer Rotating Dashed Ring */}
-              <div
-                className="absolute inset-0 rounded-full border border-dashed border-[#e60000]/40 animate-spin"
-                style={{ animationDuration: '45s' }}
-              />
+            />
 
-              {/* Inner Decorative Accent Ring */}
-              <div
-                className="absolute rounded-full border border-white/10"
-                style={{
-                  inset: `calc(16 * var(--u))`,
-                }}
-              />
+            {/* EFFECT 3: Outer Rotating Dashed Neon Ring with Cardinal Diamond Markers */}
+            <div className="absolute -inset-6 sm:-inset-8 rounded-full border-2 border-dashed border-[#E6002B]/60 animate-[spin_35s_linear_infinite] pointer-events-none">
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+              <span className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+              <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+            </div>
 
-              {/* EFFECT-06: Masked soft circle for still / film handover */}
+            {/* EFFECT 4: Inner Counter-Rotating Reticle */}
+            <div className="absolute -inset-3 sm:-inset-4 rounded-full border border-white/20 animate-[spin_55s_linear_infinite_reverse] pointer-events-none" />
+
+            {/* ------------------------------------------------------------- */}
+            {/* VIEW MODE 1: CRACKS 3D DEL PRIMER PLANTEL (SILUETA RECORTADA + ZOOM 3D) */}
+            {/* ------------------------------------------------------------- */}
+            {showcaseMode === 'players3d' && (
               <div
-                className="relative rounded-full overflow-hidden pointer-events-auto shadow-[0_0_50px_rgba(230,0,0,0.3)] border border-white/10"
-                style={{
-                  width: isMobile ? `calc(280 * var(--u))` : `calc(440 * var(--u))`,
-                  height: isMobile ? `calc(280 * var(--u))` : `calc(440 * var(--u))`,
+                className="relative w-full h-[400px] sm:h-[480px] md:h-[520px] flex items-center justify-center perspective-1000 cursor-pointer overflow-hidden select-none"
+                onMouseMove={handleCardMouseMove}
+                onMouseEnter={() => setIsCardHovered(true)}
+                onMouseLeave={() => {
+                  setIsCardHovered(false);
+                  setTilt({ rx: 0, ry: 0, px: 50, py: 50 });
                 }}
+                onClick={scrollToRoster}
+                title="Haz clic para ver la plantilla completa del Club MC"
               >
-                {/* 01: Stadium Still Render */}
-                <img
-                  src={ASSETS.img.stadium}
-                  alt="Estadio MC"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                    activeMedia === 'still' ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                  }`}
-                />
+                {/* Atmospheric Stadium Backdrop: Radial Glow + Red Neon Beam */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-[300px] sm:w-[420px] h-[300px] sm:h-[420px] rounded-full bg-radial from-[#E6002B]/40 via-[#E6002B]/10 to-transparent blur-3xl animate-pulse" />
+                  <div className="absolute w-[220px] sm:w-[320px] h-[380px] sm:h-[460px] rounded-full bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
+                </div>
 
-                {/* 02: Looping Match Film */}
+                {/* Giant Athletic Number Watermark behind player */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+                  <span className="text-[180px] sm:text-[260px] font-black font-display text-white/[0.04] leading-none tracking-tighter">
+                    #{activePlayer.number}
+                  </span>
+                </div>
+
+                {/* Main Player Cutout Silhouette with 3D Mouse Tilt + Continuous Slow Zoom ("agrandando de a poco") */}
+                <motion.div
+                  key={activePlayer.id}
+                  initial={{ opacity: 0, scale: 0.94, filter: 'blur(8px)' }}
+                  animate={{
+                    opacity: 1,
+                    filter: 'blur(0px)',
+                    scale: isCardHovered ? 1.15 : [1, 1.10, 1.02],
+                    y: [0, -8, 0],
+                  }}
+                  transition={{
+                    scale: {
+                      duration: isCardHovered ? 0.4 : 8,
+                      repeat: isCardHovered ? 0 : Infinity,
+                      ease: 'easeInOut',
+                    },
+                    y: {
+                      duration: 6,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    },
+                    opacity: { duration: 0.6 },
+                    filter: { duration: 0.6 },
+                  }}
+                  style={{
+                    transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
+                    transformStyle: 'preserve-3d',
+                  }}
+                  className="relative z-10 h-full flex flex-col items-center justify-center transition-transform duration-200 ease-out"
+                >
+                  {/* Cutout Player Figure with Seamless Bottom Gradient Mask */}
+                  <div className="relative h-[340px] sm:h-[420px] md:h-[470px] flex items-center justify-center">
+                    <img
+                      src={activePlayer.image}
+                      alt={`Jugador estrella del primer plantel: ${activePlayer.name}`}
+                      className="h-full w-auto max-w-[280px] sm:max-w-[360px] md:max-w-[400px] object-cover object-top filter contrast-110 drop-shadow-[0_25px_50px_rgba(0,0,0,0.95)]"
+                      style={{
+                        WebkitMaskImage: 'linear-gradient(to bottom, black 68%, transparent 98%)',
+                        maskImage: 'linear-gradient(to bottom, black 68%, transparent 98%)',
+                      }}
+                    />
+                    {/* Subtle red rim light reflection */}
+                    <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                  </div>
+                </motion.div>
+
+                {/* Floating Minimalist Player Identity Plaque at the bottom */}
+                <div className="absolute bottom-3 inset-x-2 sm:inset-x-4 flex flex-col items-center text-center z-20 pointer-events-auto">
+                  {/* Dorsal & Position Tag */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/85 border border-white/20 backdrop-blur-md shadow-xl text-xs font-mono mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#E6002B] animate-pulse" />
+                    <span className="text-[#FF2E50] font-black tracking-wider">#{activePlayer.number}</span>
+                    <span className="text-neutral-500">·</span>
+                    <span className="text-white font-bold uppercase">{activePlayer.position}</span>
+                    <span className="text-neutral-500">·</span>
+                    <span className="text-neutral-300 uppercase font-mono text-[10px]">{activePlayer.category}</span>
+                  </div>
+
+                  {/* Big Athletic Name */}
+                  <h3 className="font-extrabold uppercase font-display italic text-3xl sm:text-4xl md:text-5xl text-white tracking-wide leading-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+                    {activePlayer.name}
+                  </h3>
+
+                  {/* Nickname & Role */}
+                  <p className="text-xs sm:text-sm font-mono text-neutral-300 uppercase tracking-widest mt-1 flex items-center gap-2">
+                    <span className="text-[#E6002B]">★</span>
+                    <span>{activePlayer.nickname}</span>
+                    <span className="text-neutral-600">|</span>
+                    <span className="text-white font-semibold">{activePlayer.role}</span>
+                    <span className="text-[#E6002B]">★</span>
+                  </p>
+
+                  {/* Player Carousel Pagination Indicators */}
+                  <div className="flex items-center gap-2 mt-3">
+                    {STAR_PLAYERS.map((p, idx) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          playWhoosh();
+                          setCurrentPlayerIdx(idx);
+                        }}
+                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                          idx === currentPlayerIdx
+                            ? 'w-8 bg-[#E6002B] shadow-[0_0_12px_#E6002B]'
+                            : 'w-2 bg-white/30 hover:bg-white/60'
+                        }`}
+                        aria-label={`Ver crack del primer plantel: ${p.name}`}
+                        title={p.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Carousel Side Navigation Buttons */}
+                <button
+                  type="button"
+                  onClick={handlePrevPlayer}
+                  aria-label="Ver jugador anterior del primer plantel"
+                  className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 hover:bg-[#E6002B] border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-xl hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+                >
+                  <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextPlayer}
+                  aria-label="Ver siguiente jugador del primer plantel"
+                  className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 hover:bg-[#E6002B] border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-xl hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+                >
+                  <ChevronRight className="w-5 h-5" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* VIEW MODE 2: ESCUDO 3D POTENCIADO (ESCUDO OFICIAL HOLOGRÁFICO) */}
+            {/* ------------------------------------------------------------- */}
+            {showcaseMode === 'shield3d' && (
+              <div
+                className="relative w-full h-full flex flex-col items-center justify-center perspective-1000 cursor-pointer"
+                onMouseMove={handleShieldMouseMove}
+                onMouseEnter={() => setIsShieldHovered(true)}
+                onMouseLeave={() => {
+                  setIsShieldHovered(false);
+                  setShieldTilt({ rx: 0, ry: 0 });
+                }}
+                onClick={handleShieldClick}
+                title="Haz clic para celebrar el gol y activar la energía del club"
+              >
+                {/* 3D Floating Shield Unit */}
+                <motion.div
+                  animate={{ y: [-8, 8, -8] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center transition-transform duration-300 ${
+                    shieldBurst ? 'scale-125' : isShieldHovered ? 'scale-110' : 'scale-100'
+                  }`}
+                  style={{
+                    transform: `rotateX(${shieldTilt.rx}deg) rotateY(${shieldTilt.ry}deg)`,
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  {/* Energy burst on click */}
+                  {shieldBurst && (
+                    <div className="absolute inset-0 rounded-full bg-[#E6002B] blur-2xl animate-ping opacity-80 pointer-events-none" />
+                  )}
+
+                  {/* Concentric Platinum and Crimson Halo Glow */}
+                  <div className="absolute -inset-8 rounded-full bg-gradient-to-tr from-[#E6002B] via-red-900/30 to-transparent blur-3xl opacity-70 pointer-events-none" />
+                  
+                  {/* High-Definition Official Shield */}
+                  <div className="relative w-48 h-48 sm:w-60 sm:h-60 z-20 flex items-center justify-center filter drop-shadow-[0_0_25px_rgba(230,0,43,0.8)] hover:drop-shadow-[0_0_40px_rgba(230,0,43,1)] transition-all">
+                    <img
+                      src="/logo-mc-shield.png"
+                      alt="Escudo Oficial Club MC Emprender Martín Careaga - Aimentando Sueños"
+                      width={240}
+                      height={240}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Slogan Pedestal Plate - Clean, fully visible, zero collisions */}
+                <div className="mt-4 px-6 py-2.5 rounded-full bg-black/90 border-2 border-white/20 backdrop-blur-xl shadow-[0_0_35px_rgba(230,0,43,0.35)] text-center z-20">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 font-bold block">
+                    CLUB MC EMPRENDER
+                  </span>
+                  <span className="text-sm sm:text-base font-extrabold font-display text-white tracking-widest flex items-center gap-2.5 justify-center">
+                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shadow-[0_0_8px_#E6002B] shrink-0" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-300">
+                      ALIMENTANDO SUEÑOS
+                    </span>
+                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shadow-[0_0_8px_#E6002B] shrink-0" />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ------------------------------------------------------------- */}
+            {/* VIEW MODE 3: FILM ESTADIO (VIDEO CINEMATOGRÁFICO)             */}
+            {/* ------------------------------------------------------------- */}
+            {showcaseMode === 'film' && (
+              <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/25 shadow-[0_0_60px_rgba(230,0,43,0.45)] ring-4 ring-[#E6002B]/35">
                 <video
                   ref={videoRef}
                   src={ASSETS.video.film}
@@ -172,293 +644,97 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   loop
                   muted={isMuted}
                   playsInline
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                    activeMedia === 'film' ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                  }`}
+                  className="w-full h-full object-cover"
                 />
-
-                {/* Dark Vignette Overlay for Dramatic Contrast */}
-                <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/60 pointer-events-none" />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* PLANE 3: Hero Headline & CTA Pill */}
-          <motion.div
-            style={{ y: plane3Y }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            <div
-              className="absolute pointer-events-auto"
-              style={{
-                left: isMobile ? `calc(32 * var(--u))` : `calc(110 * var(--u))`,
-                top: isMobile ? `calc(160 * var(--u))` : `calc(210 * var(--u))`,
-                maxWidth: isMobile ? `calc(376 * var(--u))` : `calc(660 * var(--u))`,
-              }}
-            >
-              {/* Masked Headline Lines */}
-              <div className="space-y-0 leading-none">
-                {HERO.headline.map((word, idx) => (
-                  <div key={idx} className="overflow-hidden">
-                    <motion.div
-                      initial={{ y: '100%' }}
-                      animate={{ y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.1 * idx, ease: [0.16, 1, 0.3, 1] }}
-                      className="font-black uppercase tracking-tight font-display"
-                      style={{
-                        fontSize: isMobile ? `calc(48 * var(--u))` : `calc(92 * var(--u))`,
-                        ...(word === 'Táctica'
-                          ? {
-                              backgroundImage: 'linear-gradient(180deg, #cc0000 89.759%, rgba(204,0,0,0) 132.46%)',
-                              WebkitBackgroundClip: 'text',
-                              color: 'transparent',
-                            }
-                          : { color: '#ffffff' }),
-                      }}
-                    >
-                      {word}
-                    </motion.div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Lede text */}
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
-                className="text-neutral-300 font-sans leading-relaxed"
-                style={{
-                  fontSize: isMobile ? `calc(14 * var(--u))` : `calc(17 * var(--u))`,
-                  marginTop: isMobile ? `calc(18 * var(--u))` : `calc(28 * var(--u))`,
-                  maxWidth: isMobile ? `calc(360 * var(--u))` : `calc(480 * var(--u))`,
-                }}
-              >
-                {HERO.lede}
-              </motion.p>
-
-              {/* CTA Pill & Badge */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="flex items-center gap-4"
-                style={{
-                  marginTop: isMobile ? `calc(22 * var(--u))` : `calc(32 * var(--u))`,
-                }}
-              >
-                <a
-                  href="#squads"
-                  onClick={playUiClick}
-                  className="rounded-full bg-[#e60000] hover:bg-[#ff1a1a] text-white font-mono uppercase tracking-wider font-bold transition-all shadow-[0_0_30px_rgba(230,0,0,0.5)] flex items-center justify-center gap-2 cursor-pointer"
-                  style={{
-                    padding: isMobile
-                      ? `calc(10 * var(--u)) calc(22 * var(--u))`
-                      : `calc(14 * var(--u)) calc(30 * var(--u))`,
-                    fontSize: isMobile ? `calc(12 * var(--u))` : `calc(14 * var(--u))`,
-                  }}
-                >
-                  <span>{HERO.cta}</span>
-                  <svg
-                    style={{
-                      width: isMobile ? `calc(14 * var(--u))` : `calc(16 * var(--u))`,
-                      height: isMobile ? `calc(14 * var(--u))` : `calc(16 * var(--u))`,
-                    }}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </a>
-
-                {/* Badge Lockup */}
-                <div
-                  className="border-l border-white/20 flex flex-col justify-center text-neutral-400 font-mono leading-tight"
-                  style={{
-                    paddingLeft: `calc(12 * var(--u))`,
-                    fontSize: isMobile ? `calc(10 * var(--u))` : `calc(11 * var(--u))`,
-                  }}
-                >
-                  <span className="text-[#e60000] font-bold">{HERO.badge[0]}</span>
-                  <span>{HERO.badge[1]} {HERO.badge[2]}</span>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* PLANE 4: Hero Cards (Learners strip, Stats gauge, Tactical insights) */}
-          <motion.div
-            style={{ y: plane4Y }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            {/* Learners Card */}
-            <div
-              className="absolute glass rounded-2xl border border-white/10 backdrop-blur-md flex items-center pointer-events-auto shadow-xl"
-              style={{
-                left: isMobile ? `calc(24 * var(--u))` : `calc(110 * var(--u))`,
-                bottom: isMobile ? `calc(140 * var(--u))` : `calc(75 * var(--u))`,
-                padding: isMobile ? `calc(10 * var(--u)) calc(14 * var(--u))` : `calc(12 * var(--u)) calc(20 * var(--u))`,
-                gap: `calc(12 * var(--u))`,
-              }}
-            >
-              <div className="flex -space-x-2">
-                {ASSETS.img.avatars.slice(0, 3).map((av, idx) => (
-                  <img
-                    key={idx}
-                    src={av}
-                    alt="Player"
-                    className="rounded-full border border-black object-cover"
-                    style={{
-                      width: isMobile ? `calc(26 * var(--u))` : `calc(32 * var(--u))`,
-                      height: isMobile ? `calc(26 * var(--u))` : `calc(32 * var(--u))`,
-                    }}
-                  />
-                ))}
-              </div>
-              <div>
-                <span
-                  className="font-black font-display text-white block leading-none"
-                  style={{ fontSize: isMobile ? `calc(18 * var(--u))` : `calc(22 * var(--u))` }}
-                >
-                  {HERO.learners.value}
-                </span>
-                <span
-                  className="text-neutral-400 font-mono uppercase"
-                  style={{ fontSize: isMobile ? `calc(9 * var(--u))` : `calc(10 * var(--u))` }}
-                >
-                  {HERO.learners.label}
-                </span>
-              </div>
-            </div>
-
-            {/* Tactical Insight Card (Desktop & Mobile) */}
-            {!isMobile && (
-              <div
-                className="absolute glass rounded-2xl border border-white/10 backdrop-blur-md p-4 pointer-events-auto shadow-xl flex items-center gap-3"
-                style={{
-                  right: `calc(90 * var(--u))`,
-                  top: `calc(220 * var(--u))`,
-                  padding: `calc(12 * var(--u)) calc(18 * var(--u))`,
-                  gap: `calc(14 * var(--u))`,
-                }}
-              >
-                <div
-                  className="rounded-xl overflow-hidden border border-white/10 shrink-0"
-                  style={{
-                    width: `calc(44 * var(--u))`,
-                    height: `calc(44 * var(--u))`,
-                  }}
-                >
-                  <img src={ASSETS.img.tacticalThumb} alt="Tactical" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#e60000] block">
-                    {HERO.insight.kicker}
-                  </span>
-                  <span className="font-bold font-display text-white text-base">
-                    {HERO.insight.title}
-                  </span>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00cc44]" />
-                    <span className="text-[10px] font-mono text-neutral-400">{HERO.avgScore.value} {HERO.avgScore.label}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Stats Gauge Tile (Right side bottom) */}
-            {!isMobile && (
-              <div
-                className="absolute glass rounded-2xl border border-white/10 backdrop-blur-md p-4 pointer-events-auto shadow-xl"
-                style={{
-                  right: `calc(90 * var(--u))`,
-                  bottom: `calc(85 * var(--u))`,
-                  padding: `calc(14 * var(--u)) calc(20 * var(--u))`,
-                }}
-              >
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-2xl font-black font-display text-white">
-                    {HERO.sessions.value}
-                  </span>
-                  <span className="text-xs font-mono text-neutral-400 uppercase">
-                    {HERO.sessions.label}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4 pt-2 border-t border-white/10 text-xs font-mono">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[#e60000] font-bold">{HERO.dataPoints.value}</span>
-                    <span className="text-neutral-400">{HERO.dataPoints.label}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-
-          {/* PLANE 5: Signature 01 / 02 Pager & Sound Toggle Control */}
-          <motion.div
-            style={{ y: plane5Y }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            <div
-              className="absolute pointer-events-auto flex items-center gap-3 glass rounded-full border border-white/15 px-3 py-1.5 shadow-2xl backdrop-blur-lg"
-              style={{
-                left: isMobile ? `calc(220 * var(--u))` : `calc(860 * var(--u))`,
-                bottom: isMobile ? `calc(60 * var(--u))` : `calc(60 * var(--u))`,
-                transform: 'translateX(-50%)',
-              }}
-            >
-              {/* 01: Stadium Still Button */}
-              <button
-                onClick={() => handleToggleMedia('still')}
-                className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
-                  activeMedia === 'still'
-                    ? 'bg-[#e60000] text-white font-bold shadow-md'
-                    : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                01 Estático
-              </button>
-
-              <span className="text-neutral-600 font-mono text-xs">——</span>
-
-              {/* 02: Match Film Button */}
-              <button
-                onClick={() => handleToggleMedia('film')}
-                className={`px-3 py-1 rounded-full text-xs font-mono transition-all cursor-pointer ${
-                  activeMedia === 'film'
-                    ? 'bg-[#e60000] text-white font-bold shadow-md'
-                    : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                02 Film Match
-              </button>
-
-              {/* Sound Toggle (only active in film mode) */}
-              {activeMedia === 'film' && (
+                <div className="absolute inset-0 bg-radial from-transparent via-black/30 to-black/80 pointer-events-none" />
+                
+                {/* Audio Button for Film */}
                 <button
-                  onClick={() => {
-                    playUiClick();
-                    setIsMuted(!isMuted);
-                  }}
-                  className="ml-1 p-1 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
-                  title={isMuted ? 'Activar sonido' : 'Silenciar'}
+                  type="button"
+                  onClick={() => setIsMuted(!isMuted)}
+                  aria-label={isMuted ? 'Activar sonido del estadio' : 'Silenciar sonido del estadio'}
+                  className="absolute bottom-5 right-5 p-2 rounded-full bg-black/80 border border-white/20 text-white z-30 cursor-pointer hover:bg-[#E6002B] transition-colors"
                 >
-                  {isMuted ? (
-                    <svg className="w-3.5 h-3.5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                    </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5 text-[#00cc44]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                    </svg>
-                  )}
+                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
                 </button>
-              )}
+              </div>
+            )}
+
+            {/* Broadcast Live Status Pill - Positioned safely at top-left of stage, avoiding all cards & pedestals */}
+            <div className="absolute -top-3.5 left-2 sm:-top-4 sm:left-2 glass rounded-full border border-white/20 bg-black/85 backdrop-blur-xl px-4 py-1.5 shadow-2xl flex items-center gap-2.5 z-30 pointer-events-auto">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00cc44] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00cc44]" />
+              </span>
+              <span className="text-xs font-extrabold font-display uppercase tracking-wider text-white">
+                MC EMPRENDER
+              </span>
+              <span className="text-[#E6002B] font-bold">·</span>
+              <span className="text-xs font-bold font-mono text-white">
+                ALIMENTANDO SUEÑOS
+              </span>
+              <span className="text-neutral-500 hidden sm:inline">·</span>
+              <span className="text-[11px] font-mono text-neutral-300 hidden sm:inline">
+                Primer Plantel
+              </span>
             </div>
-          </motion.div>
-        </div>
+          </div>
+
+          {/* 3D Mode Selector Dock */}
+          <nav
+            aria-label="Selector de visualización del Hero"
+            className="mt-8 sm:mt-10 flex items-center gap-2 sm:gap-3 glass rounded-full border border-white/20 px-3 sm:px-4 py-2 shadow-2xl bg-black/80 backdrop-blur-xl z-20"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                playUiClick();
+                setShowcaseMode('players3d');
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
+                showcaseMode === 'players3d'
+                  ? 'bg-[#E6002B] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
+                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+              <span>01 Cracks 3D (Aumento)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playUiClick();
+                setShowcaseMode('shield3d');
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
+                showcaseMode === 'shield3d'
+                  ? 'bg-gradient-to-r from-[#E6002B] to-[#99001D] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
+                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+              <span>02 Escudo 3D</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                playUiClick();
+                setShowcaseMode('film');
+              }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
+                showcaseMode === 'film'
+                  ? 'bg-[#E6002B] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
+                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+              <span className="hidden sm:inline">03 Film Estadio</span>
+              <span className="sm:hidden">03 Film</span>
+            </button>
+          </nav>
+        </motion.div>
       </div>
     </section>
   );

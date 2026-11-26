@@ -3,11 +3,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { NAV } from '../content';
 import { playUiClick } from '../utils/soundEffects';
 
-interface SiteChromeProps {
-  onOpenDossier?: () => void;
-}
+interface SiteChromeProps {}
 
-export const SiteChrome: React.FC<SiteChromeProps> = ({ onOpenDossier }) => {
+export const SiteChrome: React.FC<SiteChromeProps> = () => {
   // EFFECT-16: Sticky header reveal past 75vh
   const [showStickyHeader, setShowStickyHeader] = useState(false);
   // EFFECT-17: Menu overlay state
@@ -252,18 +250,6 @@ export const SiteChrome: React.FC<SiteChromeProps> = ({ onOpenDossier }) => {
 
               <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-500">
                 <span>© {new Date().getFullYear()} Martín Careaga</span>
-                {onOpenDossier && (
-                  <button
-                    onClick={() => {
-                      playUiClick();
-                      setIsMenuOpen(false);
-                      onOpenDossier();
-                    }}
-                    className="text-[#e60000] hover:underline cursor-pointer"
-                  >
-                    Dossier de Arquitectura
-                  </button>
-                )}
               </div>
             </div>
           </motion.div>

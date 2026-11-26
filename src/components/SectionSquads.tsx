@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { SQUADS_DATA, SquadItem } from '../content';
+import { SquadItem } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
 import { Spotlight } from './Spotlight';
 import { playUiClick } from '../utils/soundEffects';
 
 export const SectionSquads: React.FC = () => {
-  const [selectedId, setSelectedId] = useState<string>(SQUADS_DATA[0].id);
-  const activeSquad = SQUADS_DATA.find((s) => s.id === selectedId) || SQUADS_DATA[0];
+  const { content } = useSiteContent();
+  const SQUADS_DATA = content.squads;
+  const [selectedId, setSelectedId] = useState<string>(() => SQUADS_DATA[0]?.id || 'sub7');
+  const activeSquad = SQUADS_DATA.find((s) => s.id === selectedId) || SQUADS_DATA[0] || {
+    id: 'default',
+    name: 'Categoría',
+    minutes: 60,
+    level: 'Formativo',
+    blurb: 'En formación.',
+    metrics: []
+  };
 
   return (
     <section id="squads" className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">

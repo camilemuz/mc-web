@@ -17,6 +17,7 @@ export interface Player {
   preferredFoot: 'Derecho' | 'Izquierdo' | 'Ambidiestro';
   bio: string;
   marketValue?: string;
+  image?: string;
 }
 
 export interface MatchEvent {

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { EVENTS_DATA } from '../data/mockData';
 import { ClubEvent } from '../types';
+import { useSiteContent } from '../utils/ContentContext';
 import { playUiClick, playGoalCheer } from '../utils/soundEffects';
 import { Calendar as CalendarIcon, MapPin, Clock, Download, Check, Bell } from 'lucide-react';
 
 export const CalendarSection: React.FC = () => {
+  const { content } = useSiteContent();
+  const EVENTS_DATA = content.events;
   const [selectedFilter, setSelectedFilter] = useState<string>('Todos');
   const [remindedEvents, setRemindedEvents] = useState<Record<string, boolean>>({});
 

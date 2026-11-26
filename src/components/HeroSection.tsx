@@ -6,10 +6,9 @@ import { ThreeSoccerBallHero } from './ThreeSoccerBallHero';
 
 interface HeroSectionProps {
   onOpenStore: () => void;
-  onOpenDossier: () => void;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenStore, onOpenDossier }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenStore }) => {
   const nextMatch = UPCOMING_MATCHES[0];
   const [heroDisplayMode, setHeroDisplayMode] = useState<'ball3d' | 'countdown'>('ball3d');
 
@@ -55,7 +54,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenStore, onOpenDos
           {/* Unboxed Metadata Kicker */}
           <div className="flex items-center gap-2 text-xs text-neutral-400">
             <span className="text-[#E6002B] font-bold tracking-widest uppercase">
-              Club Atlético MC & Cantera
+              Club MC Emprender & Cantera
             </span>
             <span aria-hidden="true">·</span>
             <span>Director Técnico Martín Careaga</span>
@@ -94,17 +93,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenStore, onOpenDos
             >
               <span>Inscripciones Escuela Careaga</span>
             </a>
-
-            <button
-              onClick={() => {
-                playUiClick();
-                onOpenDossier();
-              }}
-              className="px-4 py-3.5 text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#E6002B]" />
-              <span>Ver Propuesta de Diseño</span>
-            </button>
           </div>
 
           {/* Trust Metrics Adjacency */}

@@ -1,9 +1,12 @@
 import React from 'react';
-import { METHOD_STEPS, METHOD_METRICS } from '../content';
+import { useSiteContent } from '../utils/ContentContext';
 import { AnimatedCounter } from './AnimatedCounter';
 import { Spotlight } from './Spotlight';
 
 export const SectionMethod: React.FC = () => {
+  const { content } = useSiteContent();
+  const METHOD_STEPS = content.methodSteps;
+  const METHOD_METRICS = content.methodMetrics;
   return (
     <section id="method" className="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
       {/* Scroll drift light orb */}

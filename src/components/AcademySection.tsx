@@ -14,7 +14,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
   const [parentName, setParentName] = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [selectedAge, setSelectedAge] = useState('Sub-12');
-  const [selectedBranch, setSelectedBranch] = useState('Sede Central - Estadio MC');
+  const [selectedBranch, setSelectedBranch] = useState('Sede Central - Club Deportivo Litoral');
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +76,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
             Ejercicios situacionales con balón, toma de decisiones bajo presión y desarrollo de la técnica individual depurada desde edades tempranas.
           </p>
           <div className="mt-4 pt-4 border-t border-neutral-800/80 text-[11px] text-neutral-500">
-            3 entrenamientos semanales + partido de liga
+            3 entrenamientos semanales + partido de Competencia
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
         </div>
 
         <div className="bg-[#0C0C0E] border border-neutral-800 rounded-2xl p-6 relative overflow-hidden group hover:border-neutral-700 transition-all">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4">
+          <div className="w-12 h-12 rounded-xl bg-[#E6002B]/10 border border-[#E6002B]/30 flex items-center justify-center text-[#FF2E50] mb-4">
             <Award className="w-6 h-6" />
           </div>
           <h3 className="text-xl font-bold font-display text-white mb-2">
@@ -144,18 +144,18 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
 
           {selectedCategory === 'semillero' && (
             <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Etapa Semillero: Pasión & Coordinación</h4>
+              <h4 className="text-lg font-bold text-white">Etapa Semillero: Sub 7 a Sub 13</h4>
               <p className="text-xs text-neutral-300 leading-relaxed">
                 Foco en la psicomotricidad básica, el dominio del balón en espacios reducidos y el amor genuino por el juego. Los niños aprenden a compartir la pelota, respetar las reglas y disfrutar cada entrenamiento.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios</span>
-                  <span className="font-semibold text-white">Mar y Jue: 17:00 a 18:30 hs</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios Oficiales</span>
+                  <span className="font-semibold text-[#E6002B]">15:00 a 16:30 hs</span>
                 </div>
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas</span>
-                  <span className="font-semibold text-white">Césped Sintético Techado</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas & Sede</span>
+                  <span className="font-semibold text-white">Complejo Deportivo Social Litoral (Bajo Següencoma)</span>
                 </div>
               </div>
             </div>
@@ -163,18 +163,18 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
 
           {selectedCategory === 'tecnificacion' && (
             <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Etapa Desarrollo: Táctica & Precisión</h4>
+              <h4 className="text-lg font-bold text-white">Etapa Desarrollo: Sub 11 a Sub 14</h4>
               <p className="text-xs text-neutral-300 leading-relaxed">
                 Entrenamiento enfocado en la comprensión posicional, perfiles corporales en la recepción, golpeo con ambas piernas y transiciones rápidas de defensa a ataque.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios</span>
-                  <span className="font-semibold text-white">Lun, Mié y Vie: 18:00 a 19:45 hs</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios Oficiales</span>
+                  <span className="font-semibold text-[#E6002B]">15:00 a 16:30 hs</span>
                 </div>
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas</span>
-                  <span className="font-semibold text-white">Césped Natural Reglamentario</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas & Sede</span>
+                  <span className="font-semibold text-white">Complejo Deportivo Social Litoral (Bajo Següencoma)</span>
                 </div>
               </div>
             </div>
@@ -182,18 +182,18 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
 
           {selectedCategory === 'elite' && (
             <div className="space-y-4">
-              <h4 className="text-lg font-bold text-white">Alto Rendimiento: Competencia Profesional</h4>
+              <h4 className="text-lg font-bold text-white">Alto Rendimiento: Sub 15 a Sub 19</h4>
               <p className="text-xs text-neutral-300 leading-relaxed">
                 Régimen similar al Primer Plantel: preparación física con GPS, análisis de video táctico, trabajo específico por puestos y participación en los torneos más competitivos de la región.
               </p>
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios</span>
-                  <span className="font-semibold text-white">Lun a Vie: 16:00 a 18:30 hs</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Horarios Oficiales</span>
+                  <span className="font-semibold text-[#E6002B]">16:30 a 18:00 hs</span>
                 </div>
                 <div className="p-3 bg-neutral-900/70 rounded-lg border border-neutral-800">
-                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas</span>
-                  <span className="font-semibold text-white">Predio Central MC - Cancha 1 y 2</span>
+                  <span className="text-neutral-500 uppercase text-[10px] block">Canchas & Sede</span>
+                  <span className="font-semibold text-white">Complejo Deportivo Social Litoral (Bajo Següencoma)</span>
                 </div>
               </div>
             </div>
@@ -255,7 +255,7 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
                   Inscribir a otro alumno
                 </button>
               </div>
-            </div>
+            </div> 
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
@@ -300,9 +300,9 @@ export const AcademySection: React.FC<AcademySectionProps> = ({ onNewLead }) => 
                     onChange={(e) => setSelectedBranch(e.target.value)}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E6002B]"
                   >
-                    <option value="Sede Central">Sede Central - Predio MC</option>
-                    <option value="Sede Norte">Sede Norte</option>
-                    <option value="Sede Sur">Sede Sur - Alto Rendimiento</option>
+                    <option value="Complejo Deportivo Social Litoral (Bajo Següencoma)">Complejo Social Litoral (Bajo Següencoma)</option>
+                    <option value="Sede Central - Cancha 1">Complejo Social Litoral - Cancha Sintética</option>
+                    <option value="Sede Central - Cancha 2">Complejo Social Litoral - Cancha Césped Natural</option>
                   </select>
                 </div>
               </div>

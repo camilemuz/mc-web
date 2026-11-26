@@ -113,39 +113,47 @@ const PlayerCard3D: React.FC<PlayerCard3DProps> = ({ player, onSelect }) => {
               style={{ backgroundColor: getPositionAccent() }}
             />
 
-            {/* Stylized Player Silhouette Graphic */}
-            <svg
-              viewBox="0 0 200 240"
-              className="w-48 h-56 transition-transform duration-300 group-hover:scale-105 filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)]"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Head */}
-              <circle cx="100" cy="50" r="26" fill="#1C1C22" stroke="#2E2E38" strokeWidth="2" />
-              {/* Torso in Club Colors */}
-              <path
-                d="M55,100 L75,85 L125,85 L145,100 L140,190 L60,190 Z"
-                fill="#121216"
-                stroke="#2A2A35"
-                strokeWidth="2"
+            {player.image ? (
+              <img
+                src={player.image}
+                alt={player.name}
+                className="w-48 h-64 object-contain transition-transform duration-300 group-hover:scale-105 filter drop-shadow-[0_15px_20px_rgba(0,0,0,0.85)] z-10 pointer-events-none"
               />
-              {/* Stripes */}
-              <rect x="85" y="86" width="14" height="104" fill="#E6002B" />
-              <rect x="110" y="86" width="14" height="104" fill="#E6002B" />
-              {/* Player Number in Chest/Back */}
-              <text
-                x="100"
-                y="145"
-                fill="#FFFFFF"
-                fontFamily="Barlow Condensed, sans-serif"
-                fontWeight="900"
-                fontSize="32"
-                textAnchor="middle"
-                opacity="0.8"
+            ) : (
+              /* Stylized Player Silhouette Graphic */
+              <svg
+                viewBox="0 0 200 240"
+                className="w-48 h-56 transition-transform duration-300 group-hover:scale-105 filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)]"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                {player.number === 0 ? 'MC' : player.number}
-              </text>
-            </svg>
+                {/* Head */}
+                <circle cx="100" cy="50" r="26" fill="#1C1C22" stroke="#2E2E38" strokeWidth="2" />
+                {/* Torso in Club Colors */}
+                <path
+                  d="M55,100 L75,85 L125,85 L145,100 L140,190 L60,190 Z"
+                  fill="#121216"
+                  stroke="#2A2A35"
+                  strokeWidth="2"
+                />
+                {/* Stripes */}
+                <rect x="85" y="86" width="14" height="104" fill="#E6002B" />
+                <rect x="110" y="86" width="14" height="104" fill="#E6002B" />
+                {/* Player Number in Chest/Back */}
+                <text
+                  x="100"
+                  y="145"
+                  fill="#FFFFFF"
+                  fontFamily="Barlow Condensed, sans-serif"
+                  fontWeight="900"
+                  fontSize="32"
+                  textAnchor="middle"
+                  opacity="0.8"
+                >
+                  {player.number === 0 ? 'MC' : player.number}
+                </text>
+              </svg>
+            )}
           </div>
         </div>
 
@@ -329,9 +337,19 @@ export const PlayersRosterSection: React.FC<PlayersRosterSectionProps> = ({ play
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-neutral-800">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center font-display font-black text-3xl text-[#E6002B]">
-                  #{selectedPlayer.number === 0 ? 'DT' : selectedPlayer.number}
-                </div>
+                {selectedPlayer.image ? (
+                  <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-neutral-700 p-1 flex items-center justify-center overflow-hidden shrink-0">
+                    <img
+                      src={selectedPlayer.image}
+                      alt={selectedPlayer.name}
+                      className="w-full h-full object-contain filter drop-shadow-md"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center font-display font-black text-3xl text-[#E6002B] shrink-0">
+                    #{selectedPlayer.number === 0 ? 'DT' : selectedPlayer.number}
+                  </div>
+                )}
                 <div>
                   <h3 className="text-2xl font-bold font-display text-white">{selectedPlayer.name}</h3>
                   <div className="flex items-center gap-2 text-xs text-neutral-400 mt-1">

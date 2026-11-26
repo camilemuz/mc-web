@@ -185,10 +185,10 @@ export const FanZoneSection: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Sim Gold Chip */}
-                  <div className="w-9 h-7 rounded bg-amber-400/80 border border-amber-300 flex flex-col justify-center gap-1 p-1">
-                    <div className="w-full h-0.5 bg-amber-700" />
-                    <div className="w-full h-0.5 bg-amber-700" />
+                  {/* Platinum EMV Chip */}
+                  <div className="w-9 h-7 rounded bg-gradient-to-br from-neutral-200 to-neutral-400 border border-white/60 flex flex-col justify-center gap-1 p-1 shadow-sm">
+                    <div className="w-full h-0.5 bg-neutral-600/60" />
+                    <div className="w-full h-0.5 bg-neutral-600/60" />
                   </div>
                 </div>
 

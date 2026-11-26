@@ -22,12 +22,14 @@ import { FanZoneSection } from './components/FanZoneSection';
 import { NewsSection } from './components/NewsSection';
 import { ContactDirectSection } from './components/ContactDirectSection';
 import { Footer } from './components/Footer';
-import { TechArchitectureModal } from './components/TechArchitectureModal';
+import { AdminLoginModal } from './components/AdminLoginModal';
 import { AdminCMSModal } from './components/AdminCMSModal';
 import { PRODUCTS_DATA, CURRENT_LIVE_MATCH, NEWS_DATA, PLAYERS_DATA } from './data/mockData';
 import { DOMAINS, CLAIMS } from './content';
+import { useSiteContent } from './utils/ContentContext';
 
 export default function App() {
+  const { content } = useSiteContent();
   // Live Match State (editable via CMS)
   const [liveMatch, setLiveMatch] = useState<Match>(() => {
     try {
@@ -125,8 +127,43 @@ export default function App() {
   });
 
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isDossierOpen, setIsDossierOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem('mc_admin_authenticated') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'admin'>(() => {
+    try {
+      const isAuth = sessionStorage.getItem('mc_admin_authenticated') === 'true';
+      if (typeof window !== 'undefined' && window.location.hash === '#admin' && isAuth) {
+        return 'admin';
+      }
+    } catch {
+      // Ignore
+    }
+    return 'home';
+  });
+
+  // Listen to hash navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#admin') {
+        const isAuth = sessionStorage.getItem('mc_admin_authenticated') === 'true';
+        if (isAuth) {
+          setCurrentView('admin');
+        } else {
+          setIsLoginOpen(true);
+        }
+      } else if (window.location.hash !== '#admin') {
+        setCurrentView('home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -207,7 +244,60 @@ export default function App() {
     setLeads((prev) => [newLead, ...prev]);
   };
 
+  const handleOpenAdmin = () => {
+    if (isAdminAuthenticated) {
+      window.location.hash = 'admin';
+      setCurrentView('admin');
+    } else {
+      setIsLoginOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAdminAuthenticated(true);
+    setIsLoginOpen(false);
+    window.location.hash = 'admin';
+    setCurrentView('admin');
+  };
+
+  const handleLogout = () => {
+    try {
+      sessionStorage.removeItem('mc_admin_authenticated');
+    } catch {
+      // Ignore
+    }
+    setIsAdminAuthenticated(false);
+    window.location.hash = '';
+    setCurrentView('home');
+  };
+
+  const handleBackToSite = () => {
+    window.location.hash = '';
+    setCurrentView('home');
+  };
+
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // If in Admin view, render ONLY the dedicated Admin Page
+  if (currentView === 'admin') {
+    return (
+      <AdminCMSModal
+        isOpen={true}
+        onClose={handleBackToSite}
+        onLogout={handleLogout}
+        liveMatch={liveMatch}
+        onUpdateLiveMatch={setLiveMatch}
+        products={products}
+        onUpdateProducts={setProducts}
+        news={news}
+        onUpdateNews={setNews}
+        players={players}
+        onUpdatePlayers={setPlayers}
+        leads={leads}
+        onUpdateLeadStatus={handleUpdateLeadStatus}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white relative selection:bg-[#E6002B] selection:text-white">
@@ -218,14 +308,13 @@ export default function App() {
       <SmoothScroll />
 
       {/* Site Chrome: Sticky Header past 75vh and Mobile Menu Overlay */}
-      <SiteChrome onOpenDossier={() => setIsDossierOpen(true)} />
+      <SiteChrome />
 
-      {/* Top Bar with Admin CMS trigger */}
+      {/* Top Bar with Admin login trigger */}
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenDossier={() => setIsDossierOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenAdmin={handleOpenAdmin}
       />
 
       <main className="relative z-10">
@@ -235,14 +324,13 @@ export default function App() {
             const el = document.getElementById('tienda');
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
-          onOpenDossier={() => setIsDossierOpen(true)}
         />
 
         {/* SECTION-09: Squads (Eight-row selector against a live glass card) */}
         <SectionSquads />
 
         {/* SECTION-10: Velocity Marquee Band 1 (DOMAINS) */}
-        <VelocityMarquee words={[...DOMAINS]} baseVelocity={-1.5} />
+        <VelocityMarquee words={[...content.domains]} baseVelocity={-0.28} />
 
         {/* SECTION-11: Method (Sticky intro, 3 steps, 4 counters) */}
         <SectionMethod />
@@ -251,7 +339,7 @@ export default function App() {
         <SectionStaff />
 
         {/* SECTION-10: Velocity Marquee Band 2 (CLAIMS) */}
-        <VelocityMarquee words={[...CLAIMS]} baseVelocity={1.8} />
+        <VelocityMarquee words={[...content.claims]} baseVelocity={0.28} />
 
         {/* SECTION-13: Memberships (Monthly/Annual switch, 3 plans) */}
         <SectionMemberships />
@@ -276,7 +364,6 @@ export default function App() {
               const el = document.getElementById('tienda');
               el?.scrollIntoView({ behavior: 'smooth' });
             }}
-            onOpenDossier={() => setIsDossierOpen(true)}
           />
 
           {/* Live Match Center */}
@@ -315,28 +402,13 @@ export default function App() {
       </main>
 
       {/* SECTION-15: Site Footer */}
-      <SiteFooter onOpenDossier={() => setIsDossierOpen(true)} />
+      <SiteFooter />
 
-      {/* Senior Architecture & Tech Proposal Modal */}
-      <TechArchitectureModal
-        isOpen={isDossierOpen}
-        onClose={() => setIsDossierOpen(false)}
-      />
-
-      {/* Admin & Marketing CMS Modal */}
-      <AdminCMSModal
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        liveMatch={liveMatch}
-        onUpdateLiveMatch={setLiveMatch}
-        products={products}
-        onUpdateProducts={setProducts}
-        news={news}
-        onUpdateNews={setNews}
-        players={players}
-        onUpdatePlayers={setPlayers}
-        leads={leads}
-        onUpdateLeadStatus={handleUpdateLeadStatus}
+      {/* Admin Login Gate Modal */}
+      <AdminLoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onSuccess={handleLoginSuccess}
       />
     </div>
   );

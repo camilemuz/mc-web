@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Product, CartItem } from '../types';
 import { PRODUCTS_DATA } from '../data/mockData';
 import { JerseyCustomizer3D } from './JerseyCustomizer3D';
@@ -58,6 +59,24 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
   const [customerAddress, setCustomerAddress] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
 
+  // Close cart or modals on Escape key
+  useEffect(() => {
+    if (!isCartOpen && !selectedProductForQuickAdd && !isCheckoutOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isCheckoutOpen && checkoutStep !== 'processing') {
+          setIsCheckoutOpen(false);
+        } else if (selectedProductForQuickAdd) {
+          setSelectedProductForQuickAdd(null);
+        } else if (isCartOpen) {
+          setIsCartOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen, selectedProductForQuickAdd, isCheckoutOpen, checkoutStep, setIsCartOpen]);
+
   const productList = propProducts || PRODUCTS_DATA;
   const filteredProducts = productList.filter(
     (p) => activeCategory === 'all' || p.category === activeCategory
@@ -88,7 +107,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
         : 'Tigo Money Bolivia';
 
     const text =
-      `🏆 *NUEVO PEDIDO - CLUB ATLÉTICO MC & ESCUELA MARTÍN CAREAGA*\n\n` +
+      `🏆 *NUEVO PEDIDO - CLUB MC EMPRENDER & ESCUELA MARTÍN CAREAGA*\n\n` +
       `📦 *Código de Orden:* ${code}\n` +
       `👤 *Cliente:* ${cardHolder || 'Aficionado MC'}\n` +
       `📱 *Teléfono:* ${customerPhone || '+591 76543210'}\n` +
@@ -340,9 +359,15 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
       </div>
 
       {/* Quick Add Size Modal */}
-      {selectedProductForQuickAdd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#101014] border border-neutral-700 rounded-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in-95">
+      {selectedProductForQuickAdd && createPortal(
+        <div
+          onClick={() => setSelectedProductForQuickAdd(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#101014] border border-neutral-700 rounded-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in-95"
+          >
             <h4 className="text-lg font-bold font-display text-white mb-1">
               Seleccionar Talle
             </h4>
@@ -389,14 +414,24 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* SLIDE-OVER SHOPPING CART DRAWER */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-sm">
+      {isCartOpen && createPortal(
+        <div
+          onClick={() => {
+            playUiClick();
+            setIsCartOpen(false);
+          }}
+          className="fixed inset-0 z-[100] overflow-hidden bg-black/70 backdrop-blur-sm"
+        >
           <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-            <div className="w-screen max-w-md bg-[#0D0D10] border-l border-neutral-800 shadow-2xl flex flex-col justify-between">
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-screen max-w-md bg-[#0D0D10] border-l border-neutral-800 shadow-2xl flex flex-col justify-between"
+            >
               {/* Cart Header */}
               <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -406,7 +441,12 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                   </h3>
                 </div>
                 <button
-                  onClick={() => setIsCartOpen(false)}
+                  type="button"
+                  aria-label="Cerrar carrito"
+                  onClick={() => {
+                    playUiClick();
+                    setIsCartOpen(false);
+                  }}
                   className="w-8 h-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
@@ -524,13 +564,22 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* SECURE PAYMENT GATEWAY CHECKOUT MODAL */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="relative w-full max-w-xl bg-[#0E0E12] border border-neutral-700 rounded-2xl p-6 sm:p-8 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+      {isCheckoutOpen && createPortal(
+        <div
+          onClick={() => {
+            if (checkoutStep !== 'processing') setIsCheckoutOpen(false);
+          }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl bg-[#0E0E12] border border-neutral-700 rounded-2xl p-6 sm:p-8 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95"
+          >
             {checkoutStep !== 'processing' && (
               <button
                 onClick={() => setIsCheckoutOpen(false)}
@@ -805,7 +854,8 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
