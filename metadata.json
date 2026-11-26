@@ -1,0 +1,8 @@
+{
+  "name": "Remix MC Martín Careaga - Club \u0026 Escuela de Fútbol Oficial",
+  "description": "Sitio oficial de la Escuela de Fútbol Martín Careaga y Primer Plantel MC: plantilla de jugadores, centro de partidos en vivo, tienda oficial 3D interactiva, noticias, eventos y pasarela de compras seguras.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
