@@ -269,24 +269,36 @@
     },
     "AdminUser": {
       "title": "AdminUser",
-      "description": "Authorized Club MC CMS administrator record.",
+      "description": "Authorized Club MC CMS administrator or marketing editor keyed by lowercase Google email.",
       "type": "object",
       "properties": {
         "email": {
           "type": "string",
-          "maxLength": 254
+          "minLength": 5,
+          "maxLength": 254,
+          "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
         },
         "role": {
           "type": "string",
-          "enum": ["admin"],
+          "enum": ["admin", "marketing"],
           "maxLength": 16
+        },
+        "addedBy": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 254
         },
         "createdAt": {
           "type": "string",
           "format": "date-time"
         }
       },
-      "required": ["email", "role", "createdAt"]
+      "required": ["email", "name", "role", "addedBy", "createdAt"]
     }
   },
   "firestore": {
@@ -310,9 +322,9 @@
       "schema": { "$ref": "#/entities/AcademyLead" },
       "description": "Private academy enrollment leads (PII isolated to verified admins only)."
     },
-    "/admins/{userId}": {
+    "/admins/{adminEmail}": {
       "schema": { "$ref": "#/entities/AdminUser" },
-      "description": "Trusted RBAC registry of authorized Club MC administrators."
+      "description": "Trusted RBAC registry of authorized Club MC administrators and marketing editors keyed by lowercase email."
     }
   }
 }

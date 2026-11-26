@@ -15,6 +15,10 @@ service cloud.firestore {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidAdminEmailId(emailId) {
+      return emailId is string && emailId.size() >= 5 && emailId.size() <= 254 && emailId.matches('^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$');
+    }
+
     function incoming() {
       return request.resource.data;
     }
@@ -31,10 +35,17 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.email_verified == true;
     }
 
+    function isOwner() {
+      return isVerifiedUser()
+        && request.auth.token.email is string
+        && request.auth.token.email.lower() == 'lemuzmujiquita@gmail.com';
+    }
+
     function isAdmin() {
-      return isVerifiedUser() && (
-        request.auth.token.email == 'lemuzmujiquita@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      return isOwner() || (
+        isVerifiedUser()
+        && request.auth.token.email is string
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()))
       );
     }
 
@@ -122,11 +133,13 @@ service cloud.firestore {
         && data.status is string && data.status in ['Nuevo', 'Contactado', 'Prueba Asignada', 'Inscrito'];
     }
 
-    function isValidAdminUser(data) {
-      return data.keys().hasAll(['email', 'role', 'createdAt'])
-        && data.keys().hasOnly(['email', 'role', 'createdAt'])
-        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
-        && data.role is string && data.role == 'admin';
+    function isValidAdminUser(data, adminEmail) {
+      return data.keys().hasAll(['email', 'name', 'role', 'addedBy', 'createdAt'])
+        && data.keys().hasOnly(['email', 'name', 'role', 'addedBy', 'createdAt'])
+        && data.email is string && data.email == adminEmail && isValidAdminEmailId(data.email)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 100
+        && data.role is string && data.role in ['admin', 'marketing']
+        && data.addedBy is string && data.addedBy == request.auth.token.email.lower() && data.addedBy.size() <= 254;
     }
 
     // =========================================================
@@ -231,23 +244,27 @@ service cloud.firestore {
     }
 
     // =========================================================
-    // 6. ADMINS RBAC REGISTRY (Verified Admin Management Only)
+    // 6. ADMINS & MARKETING RBAC REGISTRY (Owner-Managed by Email)
     // =========================================================
-    match /admins/{userId} {
-      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+    match /admins/{adminEmail} {
+      allow get: if isVerifiedUser()
+        && isValidAdminEmailId(adminEmail)
+        && request.auth.token.email is string
+        && (request.auth.token.email.lower() == adminEmail || isAdmin());
       allow list: if isAdmin();
-      allow create: if isVerifiedUser()
-        && isValidId(userId)
-        && isValidAdminUser(incoming())
-        && incoming().createdAt == request.time
-        && isAdmin();
-      allow update: if isVerifiedUser()
-        && isValidId(userId)
-        && isValidAdminUser(incoming())
+      allow create: if isOwner()
+        && isValidAdminEmailId(adminEmail)
+        && isValidAdminUser(incoming(), adminEmail)
+        && incoming().createdAt == request.time;
+      allow update: if isOwner()
+        && isValidAdminEmailId(adminEmail)
+        && isValidAdminUser(incoming(), adminEmail)
         && incoming().createdAt == existing().createdAt
-        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role'])
-        && isAdmin();
-      allow delete: if isVerifiedUser() && isValidId(userId) && isAdmin();
+        && incoming().addedBy == existing().addedBy
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role']);
+      allow delete: if isOwner()
+        && isValidAdminEmailId(adminEmail)
+        && adminEmail != 'lemuzmujiquita@gmail.com';
     }
   }
 }

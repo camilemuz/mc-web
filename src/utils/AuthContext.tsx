@@ -18,6 +18,7 @@ import {
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
+  isOwner: boolean;
   authReady: boolean;
   authError: string | null;
   signInWithGoogle: () => Promise<boolean>;
@@ -30,22 +31,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const checkAdminAccess = async (firebaseUser: User | null): Promise<boolean> => {
-    if (!firebaseUser || !firebaseUser.emailVerified) {
-      return false;
+  const checkAdminAccess = async (
+    firebaseUser: User | null
+  ): Promise<{ isAdmin: boolean; isOwner: boolean }> => {
+    if (!firebaseUser || !firebaseUser.emailVerified || !firebaseUser.email) {
+      return { isAdmin: false, isOwner: false };
     }
-    if (firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-      return true;
+    const normalizedEmail = firebaseUser.email.trim().toLowerCase();
+    if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
+      return { isAdmin: true, isOwner: true };
     }
     try {
-      const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
-      return adminSnap.exists() && adminSnap.data()?.role === 'admin';
+      const adminSnap = await getDoc(doc(db, 'admins', normalizedEmail));
+      const role = adminSnap.data()?.role;
+      const authorized = adminSnap.exists() && (role === 'admin' || role === 'marketing');
+      return { isAdmin: authorized, isOwner: false };
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `admins/${firebaseUser.uid}`, false);
-      return false;
+      handleFirestoreError(error, OperationType.GET, `admins/${normalizedEmail}`, false);
+      return { isAdmin: false, isOwner: false };
     }
   };
 
@@ -53,10 +60,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
-        const adminStatus = await checkAdminAccess(firebaseUser);
-        setIsAdmin(adminStatus);
+        const access = await checkAdminAccess(firebaseUser);
+        setIsAdmin(access.isAdmin);
+        setIsOwner(access.isOwner);
       } else {
         setIsAdmin(false);
+        setIsOwner(false);
       }
       setAuthReady(true);
     });
@@ -67,11 +76,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const adminStatus = await checkAdminAccess(result.user);
-      setIsAdmin(adminStatus);
-      if (!adminStatus) {
+      const access = await checkAdminAccess(result.user);
+      setIsAdmin(access.isAdmin);
+      setIsOwner(access.isOwner);
+      if (!access.isAdmin) {
         setAuthError(
-          `La cuenta ${result.user.email || ''} no tiene permisos de administrador autorizados para Club MC.`
+          `La cuenta ${result.user.email || ''} no está autorizada. Pide al propietario principal que agregue tu correo en el Panel Admin → Equipo & Marketing.`
         );
         await signOut(auth);
         return false;
@@ -101,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth);
       setIsAdmin(false);
+      setIsOwner(false);
     } catch {
       // Ignore signout errors
     }
@@ -113,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAdmin,
+        isOwner,
         authReady,
         authError,
         signInWithGoogle,

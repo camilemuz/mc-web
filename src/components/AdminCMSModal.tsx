@@ -1,9 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { Match, Product, Player, NewsArticle, AcademyLead, MatchEvent, ClubEvent } from '../types';
 import { playUiClick, playGoalCheer } from '../utils/soundEffects';
 import { useSiteContent, SquadItem, MethodStep, MethodMetric, StaffMember, MembershipPlan, FaqItem, ClubInfo, HeroPlayer } from '../utils/ContentContext';
 import { useTheme } from '../utils/ThemeContext';
-import { compressImageFile } from '../firebase';
+import { useAuth } from '../utils/AuthContext';
+import {
+  db,
+  ADMIN_EMAIL,
+  OperationType,
+  handleFirestoreError,
+  compressImageFile,
+} from '../firebase';
 import {
   X,
   Settings,
@@ -76,7 +91,17 @@ type CMSTab =
   | 'news'
   | 'faq'
   | 'leads'
+  | 'team'
   | 'backup';
+
+interface TeamAdminRecord {
+  email: string;
+  name: string;
+  role: 'admin' | 'marketing';
+  addedBy?: string;
+}
+
+const ADMIN_EMAIL_REGEX = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
 
 export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   isOpen,
@@ -114,9 +139,94 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   } = useSiteContent();
 
   const { theme, toggleTheme } = useTheme();
+  const { user, isOwner } = useAuth();
   const [activeTab, setActiveTab] = useState<CMSTab>('hero');
   const [searchTerm, setSearchTerm] = useState('');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  // Team & Marketing Access State (Firestore /admins collection)
+  const [teamAdmins, setTeamAdmins] = useState<TeamAdminRecord[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminName, setNewAdminName] = useState('');
+  const [newAdminRole, setNewAdminRole] = useState<'marketing' | 'admin'>('marketing');
+  const [teamBusy, setTeamBusy] = useState(false);
+
+  useEffect(() => {
+    const colRef = collection(db, 'admins');
+    return onSnapshot(
+      colRef,
+      (snapshot) => {
+        const list: TeamAdminRecord[] = snapshot.docs.map((d) => {
+          const data = d.data();
+          return {
+            email: (data.email as string) || d.id,
+            name: (data.name as string) || 'Equipo Marketing',
+            role: data.role === 'admin' ? 'admin' : 'marketing',
+            addedBy: data.addedBy as string | undefined,
+          };
+        });
+        setTeamAdmins(list);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, 'admins', false);
+      }
+    );
+  }, []);
+
+  const handleAddTeamMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isOwner || !user?.email) {
+      triggerSaveNotification('Solo el propietario principal puede agregar correos');
+      return;
+    }
+    const email = newAdminEmail.trim().toLowerCase();
+    const name = newAdminName.trim().slice(0, 100);
+    if (!ADMIN_EMAIL_REGEX.test(email) || email.length < 5 || email.length > 254) {
+      triggerSaveNotification('Ingresa un correo Google válido (ej. nombre@gmail.com)');
+      return;
+    }
+    if (!name) {
+      triggerSaveNotification('Ingresa el nombre de la persona de marketing');
+      return;
+    }
+    if (email === ADMIN_EMAIL.toLowerCase()) {
+      triggerSaveNotification('Ese correo ya es el propietario principal');
+      return;
+    }
+    setTeamBusy(true);
+    try {
+      await setDoc(doc(db, 'admins', email), {
+        email,
+        name,
+        role: newAdminRole,
+        addedBy: user.email.trim().toLowerCase(),
+        createdAt: serverTimestamp(),
+      });
+      setNewAdminEmail('');
+      setNewAdminName('');
+      setNewAdminRole('marketing');
+      triggerSaveNotification(`Acceso autorizado para ${email}`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, `admins/${email}`, false);
+      triggerSaveNotification('No se pudo autorizar el correo. Verifica las reglas de Firestore.');
+    } finally {
+      setTeamBusy(false);
+    }
+  };
+
+  const handleRemoveTeamMember = async (email: string) => {
+    if (!isOwner) return;
+    setTeamBusy(true);
+    try {
+      await deleteDoc(doc(db, 'admins', email));
+      triggerSaveNotification(`Acceso revocado para ${email}`);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `admins/${email}`, false);
+      triggerSaveNotification('No se pudo eliminar el acceso.');
+    } finally {
+      setTeamBusy(false);
+    }
+  };
 
   // Ensure window scroll is enabled for this dedicated page
   useEffect(() => {
@@ -478,6 +588,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
     { id: 'news', label: 'Noticias & Blog', icon: FileText, category: 'Comercial' },
     { id: 'leads', label: `Alumnos & Leads (${leads.length})`, icon: GraduationCap, category: 'Comercial' },
     { id: 'faq', label: 'Preguntas Frecuentes', icon: HelpCircle, category: 'Ajustes' },
+    { id: 'team', label: `Equipo & Marketing (${teamAdmins.length + 1})`, icon: Shield, category: 'Ajustes' },
     { id: 'backup', label: 'Copia de Seguridad JSON', icon: Settings, category: 'Ajustes' },
   ];
 
@@ -3295,6 +3406,152 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: EQUIPO & MARKETING (ACCESOS GOOGLE) */}
+            {activeTab === 'team' && (
+              <div className="space-y-6">
+                <div className="border-b border-neutral-800 pb-4">
+                  <h4 className="text-xl font-bold font-display text-white flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-[#E6002B]" />
+                    <span>Equipo & Marketing · Accesos Autorizados</span>
+                  </h4>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Agrega los correos Google de tu equipo de marketing para que puedan iniciar sesión con su propia cuenta y editar la página en tiempo real.
+                  </p>
+                </div>
+
+                {/* Propietario Principal */}
+                <div className="p-4 bg-neutral-900/70 border border-neutral-800 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white">{ADMIN_EMAIL}</span>
+                      <span className="px-2 py-0.5 text-[10px] font-mono uppercase rounded-md bg-[#E6002B]/20 text-[#ff4d6d] border border-[#E6002B]/40 font-bold">
+                        Propietario Principal
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-400 mt-0.5">
+                      Control total del club y único autorizado para agregar o revocar cuentas del equipo.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Formulario para agregar cuentas de marketing (solo Propietario) */}
+                {isOwner ? (
+                  <form
+                    onSubmit={handleAddTeamMember}
+                    className="p-5 bg-neutral-900/60 border border-neutral-800 rounded-2xl space-y-4"
+                  >
+                    <h5 className="text-xs font-mono uppercase text-[#E6002B] font-bold">
+                      Autorizar nuevo correo de Marketing o Admin
+                    </h5>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1">
+                          Nombre
+                        </label>
+                        <input
+                          type="text"
+                          value={newAdminName}
+                          onChange={(e) => setNewAdminName(e.target.value)}
+                          placeholder="Ej. Ana Pérez (Marketing)"
+                          maxLength={100}
+                          required
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1">
+                          Correo de Google
+                        </label>
+                        <input
+                          type="email"
+                          value={newAdminEmail}
+                          onChange={(e) => setNewAdminEmail(e.target.value)}
+                          placeholder="marketing@gmail.com"
+                          maxLength={254}
+                          required
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1">
+                          Rol
+                        </label>
+                        <select
+                          value={newAdminRole}
+                          onChange={(e) =>
+                            setNewAdminRole(e.target.value === 'admin' ? 'admin' : 'marketing')
+                          }
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                        >
+                          <option value="marketing">Marketing / Editor Web</option>
+                          <option value="admin">Administrador</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 pt-1">
+                      <p className="text-[11px] text-neutral-400">
+                        Esa persona podrá entrar al botón Admin usando su propio correo Google sin compartir contraseñas.
+                      </p>
+                      <button
+                        type="submit"
+                        disabled={teamBusy}
+                        className="px-5 py-2.5 bg-[#E6002B] hover:bg-[#c80025] disabled:opacity-60 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Autorizar Correo</span>
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="p-4 bg-neutral-900/50 border border-neutral-800 rounded-xl text-xs text-neutral-400">
+                    Solo el propietario principal ({ADMIN_EMAIL}) puede agregar o revocar cuentas del equipo.
+                  </div>
+                )}
+
+                {/* Lista de miembros autorizados */}
+                <div className="space-y-3">
+                  <span className="text-xs font-mono uppercase text-neutral-400 font-bold block">
+                    Miembros Autorizados ({teamAdmins.length})
+                  </span>
+                  {teamAdmins.length === 0 ? (
+                    <div className="p-6 text-center bg-neutral-900/40 border border-dashed border-neutral-800 rounded-2xl text-xs text-neutral-400">
+                      Todavía no hay correos adicionales de marketing. Agrega el primero arriba cuando quieras dar acceso.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {teamAdmins.map((member) => (
+                        <div
+                          key={member.email}
+                          className="p-4 bg-neutral-900/60 border border-neutral-800 rounded-xl flex flex-wrap items-center justify-between gap-3"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white">{member.name}</span>
+                              <span className="px-2 py-0.5 text-[10px] font-mono uppercase rounded-md bg-neutral-800 text-neutral-300 border border-neutral-700">
+                                {member.role === 'marketing' ? 'Marketing' : 'Admin'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-neutral-400 mt-0.5">{member.email}</p>
+                          </div>
+                          {isOwner && (
+                            <button
+                              type="button"
+                              disabled={teamBusy}
+                              onClick={() => handleRemoveTeamMember(member.email)}
+                              className="px-3 py-1.5 bg-red-950/60 hover:bg-red-900/80 border border-red-800/70 text-red-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Quitar acceso</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
