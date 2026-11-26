@@ -482,8 +482,14 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   className="relative z-10 w-[280px] sm:w-[340px] lg:w-[365px] 2xl:w-[410px] h-[340px] sm:h-[385px] lg:h-[405px] 2xl:h-[465px] flex items-end justify-center transition-transform duration-200 ease-out"
                 >
                   <img
-                    src={activePlayer.image}
+                    src={activePlayer.image || '/logo-mc-shield.png'}
                     alt={`Jugador destacado del primer plantel: ${activePlayer.name}`}
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.endsWith('/logo-mc-shield.png')) {
+                        target.src = '/logo-mc-shield.png';
+                      }
+                    }}
                     className="w-full h-full object-contain object-bottom filter drop-shadow-[0_22px_35px_rgba(0,0,0,0.45)] dark:drop-shadow-[0_24px_45px_rgba(0,0,0,0.9)] [mask-image:linear-gradient(to_bottom,black_76%,transparent_100%)] rounded-b-full"
                   />
                 </motion.div>

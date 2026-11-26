@@ -17,15 +17,21 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   const { signInWithGoogle, authError, clearAuthError, isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Only clear previous auth errors when the modal is freshly opened
+  useEffect(() => {
+    if (isOpen) {
+      clearAuthError();
+    }
+  }, [isOpen, clearAuthError]);
+
   useEffect(() => {
     if (!isOpen) return;
-    clearAuthError();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose, clearAuthError]);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen && isAdmin) {
@@ -49,7 +55,7 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
     >
       <div
         onClick={(e) => e.stopPropagation()}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -35,11 +35,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authReady, setAuthReady] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const checkAdminAccess = async (
+  const checkAdminAccess = useCallback(async (
     firebaseUser: User | null
-  ): Promise<{ isAdmin: boolean; isOwner: boolean }> => {
-    if (!firebaseUser || !firebaseUser.emailVerified || !firebaseUser.email) {
-      return { isAdmin: false, isOwner: false };
+  ): Promise<{ isAdmin: boolean; isOwner: boolean; reason?: string }> => {
+    if (!firebaseUser || !firebaseUser.email) {
+      return { isAdmin: false, isOwner: false, reason: 'No se recibió un correo electrónico válido desde Google.' };
+    }
+    if (!firebaseUser.emailVerified) {
+      return {
+        isAdmin: false,
+        isOwner: false,
+        reason: `El correo ${firebaseUser.email} no figura como verificado en Google/Firebase.`,
+      };
     }
     const normalizedEmail = firebaseUser.email.trim().toLowerCase();
     if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
@@ -49,12 +56,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const adminSnap = await getDoc(doc(db, 'admins', normalizedEmail));
       const role = adminSnap.data()?.role;
       const authorized = adminSnap.exists() && (role === 'admin' || role === 'marketing');
-      return { isAdmin: authorized, isOwner: false };
+      if (!authorized) {
+        return {
+          isAdmin: false,
+          isOwner: false,
+          reason: `La cuenta ${normalizedEmail} no está autorizada. Pide al propietario principal (${ADMIN_EMAIL}) que agregue tu correo en el Panel Admin → Equipo & Marketing.`,
+        };
+      }
+      return { isAdmin: true, isOwner: false };
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `admins/${normalizedEmail}`, false);
-      return { isAdmin: false, isOwner: false };
+      const errMsg = error instanceof Error ? error.message : String(error);
+      return {
+        isAdmin: false,
+        isOwner: false,
+        reason: `Error al verificar permisos en Firestore (${errMsg}). Verifica que las reglas de Firestore estén publicadas.`,
+      };
     }
-  };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -70,9 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthReady(true);
     });
     return () => unsubscribe();
-  }, []);
+  }, [checkAdminAccess]);
 
-  const signInWithGoogle = async (): Promise<boolean> => {
+  const signInWithGoogle = useCallback(async (): Promise<boolean> => {
     setAuthError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
@@ -81,32 +100,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsOwner(access.isOwner);
       if (!access.isAdmin) {
         setAuthError(
-          `La cuenta ${result.user.email || ''} no está autorizada. Pide al propietario principal que agregue tu correo en el Panel Admin → Equipo & Marketing.`
+          access.reason ||
+            `La cuenta ${result.user.email || ''} no está autorizada. Pide al propietario principal que agregue tu correo en el Panel Admin → Equipo & Marketing.`
         );
         await signOut(auth);
         return false;
       }
       return true;
     } catch (err: unknown) {
-      const code = (err as { code?: string })?.code || '';
+      const firebaseErr = err as { code?: string; message?: string };
+      const code = firebaseErr?.code || 'unknown';
+      const rawMessage = firebaseErr?.message || '';
+      const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+
       if (code === 'auth/popup-closed-by-user') {
-        setAuthError('Se cerró la ventana de Google antes de completar el acceso.');
+        setAuthError('Se cerró la ventana de Google antes de completar el inicio de sesión.');
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError(
+          'El navegador bloqueó la ventana emergente de Google. Permite ventanas emergentes (pop-ups) para este sitio e inténtalo nuevamente.'
+        );
+      } else if (code === 'auth/cancelled-popup-request') {
+        setAuthError('Ya hay una ventana de acceso de Google abierta. Completa o cierra esa ventana e intenta otra vez.');
       } else if (code === 'auth/unauthorized-domain') {
         setAuthError(
-          'Dominio no autorizado en Firebase Auth. Agrégalo en Firebase Console → Authentication → Settings → Authorized domains.'
+          `Dominio no autorizado (${currentHost}). Agrégalo en Firebase Console → Authentication → Configuración → Dominios autorizados.`
         );
       } else if (code === 'auth/operation-not-allowed') {
         setAuthError(
-          'Habilita el proveedor Google en Firebase Console → Authentication → Sign-in method.'
+          'El inicio de sesión con Google no está habilitado en Firebase Console → Authentication → Método de acceso.'
         );
+      } else if (code === 'auth/network-request-failed') {
+        setAuthError('Error de red al conectar con Google/Firebase. Revisa tu conexión o bloqueadores de anuncios.');
       } else {
-        setAuthError('No se pudo iniciar sesión con Google. Verifica tu conexión e inténtalo nuevamente.');
+        setAuthError(
+          `No se pudo iniciar sesión con Google (${code}). ${rawMessage ? rawMessage : 'Verifica la configuración de Firebase Auth.'}`
+        );
       }
       return false;
     }
-  };
+  }, [checkAdminAccess]);
 
-  const signOutAdmin = async () => {
+  const signOutAdmin = useCallback(async () => {
     setAuthError(null);
     try {
       await signOut(auth);
@@ -115,9 +149,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Ignore signout errors
     }
-  };
+  }, []);
 
-  const clearAuthError = () => setAuthError(null);
+  const clearAuthError = useCallback(() => setAuthError(null), []);
 
   return (
     <AuthContext.Provider
