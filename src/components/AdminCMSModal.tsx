@@ -3,6 +3,7 @@ import { Match, Product, Player, NewsArticle, AcademyLead, MatchEvent, ClubEvent
 import { playUiClick, playGoalCheer } from '../utils/soundEffects';
 import { useSiteContent, SquadItem, MethodStep, MethodMetric, StaffMember, MembershipPlan, FaqItem, ClubInfo, HeroPlayer } from '../utils/ContentContext';
 import { useTheme } from '../utils/ThemeContext';
+import { compressImageFile } from '../firebase';
 import {
   X,
   Settings,
@@ -189,25 +190,23 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   const [playerCategoryFilter, setPlayerCategoryFilter] = useState<string>('todos');
 
   // Hero Players Handlers
-  const handleHeroImageUpload = (e: React.ChangeEvent<HTMLInputElement>, playerId?: string) => {
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, playerId?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        if (playerId) {
-          const updated = (content.heroPlayers || []).map((hp) =>
-            hp.id === playerId ? { ...hp, image: dataUrl } : hp
-          );
-          updateHeroPlayers(updated);
-          triggerSaveNotification('¡Foto PNG 3D actualizada!');
-        } else {
-          setNewHeroImage(dataUrl);
-        }
+    try {
+      const dataUrl = await compressImageFile(file, 760, 0.82);
+      if (playerId) {
+        const updated = (content.heroPlayers || []).map((hp) =>
+          hp.id === playerId ? { ...hp, image: dataUrl } : hp
+        );
+        updateHeroPlayers(updated);
+        triggerSaveNotification('¡Foto PNG 3D actualizada en la nube!');
+      } else {
+        setNewHeroImage(dataUrl);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      triggerSaveNotification('Error al procesar la imagen');
+    }
   };
 
   const handleAddHeroPlayer = (e: React.FormEvent) => {
@@ -245,25 +244,23 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   };
 
   // Player Image Upload Handler
-  const handlePlayerImageUpload = (e: React.ChangeEvent<HTMLInputElement>, playerId?: string) => {
+  const handlePlayerImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, playerId?: string) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        if (playerId) {
-          const updated = players.map((p) =>
-            p.id === playerId ? { ...p, image: dataUrl } : p
-          );
-          onUpdatePlayers(updated);
-          triggerSaveNotification('¡Foto de jugador actualizada!');
-        } else {
-          setNewPlayerImage(dataUrl);
-        }
+    try {
+      const dataUrl = await compressImageFile(file, 640, 0.8);
+      if (playerId) {
+        const updated = players.map((p) =>
+          p.id === playerId ? { ...p, image: dataUrl } : p
+        );
+        onUpdatePlayers(updated);
+        triggerSaveNotification('¡Foto de jugador actualizada en la nube!');
+      } else {
+        setNewPlayerImage(dataUrl);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      triggerSaveNotification('Error al procesar la imagen');
+    }
   };
 
   if (!isOpen) return null;

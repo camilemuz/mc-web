@@ -1,0 +1,253 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================
+    // GLOBAL PRIMITIVES & RBAC HELPERS
+    // =========================================================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'lemuzmujiquita@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // =========================================================
+    // ENTITY VALIDATION BLUEPRINTS
+    // =========================================================
+    function isValidSiteConfig(data) {
+      return data.keys().hasAll(['kind', 'payload', 'updatedBy', 'updatedAt'])
+        && data.keys().hasOnly(['kind', 'payload', 'updatedBy', 'updatedAt'])
+        && data.kind is string
+        && data.kind in ['content', 'live_match']
+        && data.payload is map
+        && data.updatedBy is string
+        && data.updatedBy == request.auth.uid
+        && data.updatedBy.size() <= 128
+        && data.updatedAt == request.time;
+    }
+
+    function isValidProduct(data, productId) {
+      return data.keys().hasAll(['id', 'name', 'category', 'price', 'description', 'sizes', 'stock', 'rating', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'category', 'price', 'originalPrice', 'description', 'badge', 'sizes', 'customizable', 'stock', 'rating', 'image', 'updatedAt'])
+        && data.id is string && data.id == productId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 160
+        && data.category is string && data.category in ['camisetas', 'escuela', 'entrenamiento', 'accesorios']
+        && data.price is number && data.price >= 0 && data.price <= 100000
+        && (!('originalPrice' in data) || (data.originalPrice is number && data.originalPrice >= 0 && data.originalPrice <= 100000))
+        && data.description is string && data.description.size() <= 1200
+        && (!('badge' in data) || (data.badge is string && data.badge.size() <= 64))
+        && data.sizes is list && data.sizes.size() >= 1 && data.sizes.size() <= 15 && data.sizes[0] is string
+        && (!('customizable' in data) || data.customizable is bool)
+        && data.stock is number && data.stock >= 0 && data.stock <= 100000
+        && data.rating is number && data.rating >= 0 && data.rating <= 5
+        && (!('image' in data) || (data.image is string && data.image.size() <= 500000))
+        && data.updatedAt == request.time;
+    }
+
+    function isValidPlayer(data, playerId) {
+      return data.keys().hasAll(['id', 'name', 'number', 'position', 'category', 'age', 'height', 'nationality', 'preferredFoot', 'matchesPlayed', 'goals', 'assists', 'topSpeedKmH', 'passAccuracy', 'stamina', 'bio', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'name', 'nickname', 'number', 'position', 'category', 'age', 'height', 'nationality', 'preferredFoot', 'matchesPlayed', 'goals', 'assists', 'topSpeedKmH', 'passAccuracy', 'stamina', 'bio', 'image', 'updatedAt'])
+        && data.id is string && data.id == playerId && isValidId(data.id)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && (!('nickname' in data) || (data.nickname is string && data.nickname.size() <= 80))
+        && data.number is number && data.number >= 0 && data.number <= 99
+        && data.position is string && data.position in ['Arquero', 'Defensa', 'Mediocampista', 'Delantero', 'Cuerpo Técnico']
+        && data.category is string && data.category in ['primer-plantel', 'escuela-juvenil', 'staff', 'sub-19', 'sub-17', 'sub-15', 'sub-13', 'sub-11', 'sub-9', 'sub-7']
+        && data.age is number && data.age >= 4 && data.age <= 65
+        && data.height is string && data.height.size() <= 32
+        && data.nationality is string && data.nationality.size() <= 64
+        && data.preferredFoot is string && data.preferredFoot in ['Derecho', 'Izquierdo', 'Ambidiestro']
+        && data.matchesPlayed is number && data.matchesPlayed >= 0 && data.matchesPlayed <= 2000
+        && data.goals is number && data.goals >= 0 && data.goals <= 2000
+        && data.assists is number && data.assists >= 0 && data.assists <= 2000
+        && data.topSpeedKmH is number && data.topSpeedKmH >= 0 && data.topSpeedKmH <= 50
+        && data.passAccuracy is number && data.passAccuracy >= 0 && data.passAccuracy <= 100
+        && data.stamina is number && data.stamina >= 0 && data.stamina <= 100
+        && data.bio is string && data.bio.size() <= 1200
+        && (!('image' in data) || (data.image is string && data.image.size() <= 500000))
+        && data.updatedAt == request.time;
+    }
+
+    function isValidNewsArticle(data, articleId) {
+      return data.keys().hasAll(['id', 'title', 'category', 'date', 'readTime', 'summary', 'content', 'author', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'title', 'category', 'date', 'readTime', 'summary', 'content', 'author', 'updatedAt'])
+        && data.id is string && data.id == articleId && isValidId(data.id)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 220
+        && data.category is string && data.category in ['Primer Plantel', 'Escuela Formativa', 'Institucional', 'Club & Institucional', 'Torneos']
+        && data.date is string && data.date.size() <= 64
+        && data.readTime is string && data.readTime.size() <= 48
+        && data.summary is string && data.summary.size() <= 600
+        && data.content is list && data.content.size() >= 1 && data.content.size() <= 40 && data.content[0] is string && data.content[0].size() <= 4000
+        && data.author is string && data.author.size() <= 100
+        && data.updatedAt == request.time;
+    }
+
+    function isValidLead(data, leadId) {
+      return data.keys().hasAll(['id', 'studentName', 'ageCategory', 'parentName', 'parentPhone', 'branch', 'createdAtLabel', 'status', 'createdAt'])
+        && data.keys().hasOnly(['id', 'studentName', 'ageCategory', 'parentName', 'parentPhone', 'branch', 'createdAtLabel', 'status', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id == leadId && isValidId(data.id)
+        && data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 120
+        && data.ageCategory is string && data.ageCategory.size() >= 2 && data.ageCategory.size() <= 64
+        && data.parentName is string && data.parentName.size() >= 2 && data.parentName.size() <= 120
+        && data.parentPhone is string && data.parentPhone.size() >= 6 && data.parentPhone.size() <= 40
+        && data.branch is string && data.branch.size() >= 2 && data.branch.size() <= 160
+        && data.createdAtLabel is string && data.createdAtLabel.size() <= 64
+        && data.status is string && data.status in ['Nuevo', 'Contactado', 'Prueba Asignada', 'Inscrito'];
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 254
+        && data.role is string && data.role == 'admin';
+    }
+
+    // =========================================================
+    // 1. SITE CONFIGURATION (Public Read, Verified Admin Write)
+    // =========================================================
+    match /site_config/{docId} {
+      allow get: if isValidId(docId) && docId in ['content', 'live_match'];
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(docId)
+        && docId in ['content', 'live_match']
+        && isValidSiteConfig(incoming())
+        && incoming().kind == docId
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidId(docId)
+        && docId in ['content', 'live_match']
+        && isValidSiteConfig(incoming())
+        && incoming().kind == existing().kind
+        && incoming().diff(existing()).affectedKeys().hasOnly(['payload', 'updatedBy', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(docId) && isAdmin();
+    }
+
+    // =========================================================
+    // 2. OFFICIAL STORE PRODUCTS (Public Catalog, Admin Write)
+    // =========================================================
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isVerifiedUser()
+        && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidId(productId)
+        && isValidProduct(incoming(), productId)
+        && incoming().id == existing().id
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'price', 'originalPrice', 'description', 'badge', 'sizes', 'customizable', 'stock', 'rating', 'image', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(productId) && isAdmin();
+    }
+
+    // =========================================================
+    // 3. PLAYERS ROSTER (Public Sports Profiles, Admin Write)
+    // =========================================================
+    match /players/{playerId} {
+      allow get: if isValidId(playerId);
+      allow list: if true;
+      allow create: if isVerifiedUser()
+        && isValidId(playerId)
+        && isValidPlayer(incoming(), playerId)
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidId(playerId)
+        && isValidPlayer(incoming(), playerId)
+        && incoming().id == existing().id
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'nickname', 'number', 'position', 'category', 'age', 'height', 'nationality', 'preferredFoot', 'matchesPlayed', 'goals', 'assists', 'topSpeedKmH', 'passAccuracy', 'stamina', 'bio', 'image', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(playerId) && isAdmin();
+    }
+
+    // =========================================================
+    // 4. NEWS & PRESS (Public Articles, Admin Write)
+    // =========================================================
+    match /news/{articleId} {
+      allow get: if isValidId(articleId);
+      allow list: if true;
+      allow create: if isVerifiedUser()
+        && isValidId(articleId)
+        && isValidNewsArticle(incoming(), articleId)
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidId(articleId)
+        && isValidNewsArticle(incoming(), articleId)
+        && incoming().id == existing().id
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'date', 'readTime', 'summary', 'content', 'author', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(articleId) && isAdmin();
+    }
+
+    // =========================================================
+    // 5. ACADEMY LEADS (PII STRICTLY ISOLATED TO VERIFIED ADMINS)
+    // =========================================================
+    match /leads/{leadId} {
+      allow get: if isVerifiedUser() && isValidId(leadId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(leadId)
+        && isValidLead(incoming(), leadId)
+        && incoming().status == 'Nuevo'
+        && incoming().createdAt == request.time
+        && !('updatedAt' in incoming());
+      allow update: if isVerifiedUser()
+        && isValidId(leadId)
+        && isValidLead(incoming(), leadId)
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(leadId) && isAdmin();
+    }
+
+    // =========================================================
+    // 6. ADMINS RBAC REGISTRY (Verified Admin Management Only)
+    // =========================================================
+    match /admins/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidAdminUser(incoming())
+        && incoming().createdAt == request.time
+        && isAdmin();
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidAdminUser(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'role'])
+        && isAdmin();
+      allow delete: if isVerifiedUser() && isValidId(userId) && isAdmin();
+    }
+  }
+}

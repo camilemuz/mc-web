@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, X, Shield, ArrowRight, AlertCircle, KeyRound } from 'lucide-react';
+import { X, Shield, AlertCircle, CheckCircle2, Cloud } from 'lucide-react';
 import { playUiClick, playGoalCheer } from '../utils/soundEffects';
+import { useAuth } from '../utils/AuthContext';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -11,53 +12,38 @@ interface AdminLoginModalProps {
 export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
 }) => {
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { signInWithGoogle, authError, clearAuthError, isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
+    clearAuthError();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, clearAuthError]);
+
+  useEffect(() => {
+    if (isOpen && isAdmin) {
+      onSuccess();
+    }
+  }, [isOpen, isAdmin, onSuccess]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleLogin = async () => {
     playUiClick();
-    setError(null);
-
-    // Valid passwords
-    const trimmed = password.trim();
-    if (trimmed === 'careaga2026' || trimmed === 'admin123' || trimmed === '2026') {
-      setIsSubmitting(true);
+    setIsSubmitting(true);
+    const ok = await signInWithGoogle();
+    setIsSubmitting(false);
+    if (ok) {
       playGoalCheer();
-      try {
-        sessionStorage.setItem('mc_admin_authenticated', 'true');
-      } catch {
-        // Ignore storage error
-      }
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setPassword('');
-        onSuccess();
-      }, 400);
-    } else {
-      setError('Contraseña incorrecta. Intente con: careaga2026');
+      onSuccess();
     }
-  };
-
-  const handleQuickFill = () => {
-    playUiClick();
-    setPassword('careaga2026');
-    setError(null);
   };
 
   return (
@@ -69,10 +55,8 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md bg-white dark:bg-[#0A0A0E] border border-slate-200 dark:border-neutral-700/80 rounded-2xl shadow-2xl p-6 sm:p-8 overflow-hidden"
       >
-        {/* Subtle red ambient glow */}
         <div className="hidden dark:block absolute -top-16 -right-16 w-36 h-36 bg-[#E6002B]/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Close Button */}
         <button
           type="button"
           aria-label="Cerrar inicio de sesión"
@@ -97,83 +81,51 @@ export const AdminLoginModal: React.FC<AdminLoginModalProps> = ({
           </div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/70 border border-red-200 dark:border-red-800/60 text-[#E6002B] dark:text-[#FF4D6D] text-[11px] font-mono uppercase mb-2">
             <Shield className="w-3 h-3" />
-            <span>Acceso Administrativo</span>
+            <span>Acceso Administrativo Cloud</span>
           </div>
           <h3 className="text-xl font-extrabold font-display text-slate-900 dark:text-white">
-            Iniciar Sesión
+            Panel CMS en Tiempo Real
           </h3>
-          <p className="text-xs text-slate-600 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
-            Panel exclusivo para edición de contenidos, horarios, jugadores y partidos del Club MC.
+          <p className="text-xs text-slate-600 dark:text-neutral-400 mt-1 max-w-xs mx-auto leading-relaxed">
+            Inicia sesión con tu cuenta de Google autorizada para publicar cambios instantáneos en todos los dispositivos.
           </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/80 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-[#E6002B] dark:text-red-400" />
-            <span>{error}</span>
+        {authError && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800/80 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#E6002B] dark:text-red-400 mt-0.5" />
+            <span>{authError}</span>
           </div>
         )}
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-mono uppercase text-slate-700 dark:text-neutral-300 mb-1.5">
-              Contraseña de Administrador
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                autoFocus
-                placeholder="Ingresa la contraseña..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-neutral-900/90 border border-slate-300 dark:border-neutral-700 focus:border-[#E6002B] rounded-xl px-4 py-2.5 pr-11 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-neutral-200 transition-colors p-1 cursor-pointer"
-                title={showPassword ? 'Ocultar' : 'Mostrar'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+        <div className="mb-5 p-3.5 rounded-xl bg-slate-50 dark:bg-neutral-900/70 border border-slate-200 dark:border-neutral-800 space-y-2 text-xs text-slate-600 dark:text-neutral-300">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-[#E6002B] shrink-0" />
+            <span>Sincronización instantánea con Firebase Firestore</span>
           </div>
-
-          {/* Quick autofill helper */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-neutral-500 pt-1">
-            <span className="flex items-center gap-1 font-mono">
-              <KeyRound className="w-3 h-3 text-slate-400 dark:text-neutral-400" /> Clave por defecto:
-            </span>
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              className="text-[#E6002B] dark:text-[#FF4D6D] hover:underline font-mono font-bold cursor-pointer"
-            >
-              careaga2026
-            </button>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Actualizaciones en vivo sin borrar caché del navegador</span>
           </div>
+        </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !password.trim()}
-            className="w-full py-3 px-4 bg-[#E6002B] hover:bg-[#FF1A40] disabled:bg-slate-200 dark:disabled:bg-neutral-800 disabled:text-slate-400 dark:disabled:text-neutral-500 disabled:cursor-not-allowed text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-[#E6002B]/20 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {isSubmitting ? (
-              <span>Autenticando...</span>
-            ) : (
-              <>
-                <span>Ingresar al Panel</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={isSubmitting}
+          className="w-full py-3 px-4 bg-[#E6002B] hover:bg-[#FF1A40] disabled:bg-slate-200 dark:disabled:bg-neutral-800 disabled:text-slate-400 dark:disabled:text-neutral-500 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-[#E6002B]/25 flex items-center justify-center gap-2.5 cursor-pointer"
+        >
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M21.35 11.1h-9.18v2.92h5.27c-.23 1.48-1.69 4.35-5.27 4.35-3.17 0-5.76-2.62-5.76-5.87s2.59-5.87 5.76-5.87c1.81 0 3.01.77 3.7 1.43l2.52-2.43C16.77 4.13 14.67 3.2 12.17 3.2 7.1 3.2 3 7.3 3 12.5s4.1 9.3 9.17 9.3c5.3 0 8.81-3.72 8.81-8.97 0-.6-.06-1.06-.15-1.73z"
+            />
+          </svg>
+          <span>{isSubmitting ? 'Verificando acceso...' : 'Continuar con Google'}</span>
+        </button>
 
-        {/* Security Notice */}
         <p className="text-[10px] text-slate-500 dark:text-neutral-500 text-center mt-5 font-mono">
-          Sesión protegida · Club MC Martín Careaga © 2026
+          Autenticación verificada Firebase · Club MC Martín Careaga © 2026
         </p>
       </div>
     </div>

@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  db,
+  auth,
+  OperationType,
+  handleFirestoreError,
+  stripUndefined,
+} from '../firebase';
 import {
   HERO as DEFAULT_HERO,
   SQUADS_DATA as DEFAULT_SQUADS,
@@ -257,8 +265,51 @@ const INITIAL_CONTENT: SiteContentState = {
 
 const STORAGE_KEY = 'mc_site_content_dynamic_v6';
 
+function mergeWithInitial(parsed: Partial<SiteContentState>): SiteContentState {
+  const heroMerged = { ...INITIAL_CONTENT.hero, ...(parsed.hero || {}) };
+  if (
+    heroMerged.headline &&
+    heroMerged.headline.some(
+      (w: string) => w.toLowerCase().includes('táctica') || w.toLowerCase().includes('tactica')
+    )
+  ) {
+    heroMerged.headline = [...INITIAL_CONTENT.hero.headline];
+  }
+
+  const heroPlayersMerged =
+    parsed.heroPlayers && parsed.heroPlayers.length > 0
+      ? parsed.heroPlayers
+      : INITIAL_CONTENT.heroPlayers;
+
+  const membershipsMerged =
+    parsed.memberships && parsed.memberships.length > 0
+      ? parsed.memberships.map((m) => ({ ...m, features: m.features || [] }))
+      : INITIAL_CONTENT.memberships;
+
+  return {
+    ...INITIAL_CONTENT,
+    ...parsed,
+    hero: heroMerged,
+    aboutUs: {
+      ...INITIAL_CONTENT.aboutUs,
+      ...(parsed.aboutUs || {}),
+      pillars:
+        parsed.aboutUs?.pillars && parsed.aboutUs.pillars.length > 0
+          ? parsed.aboutUs.pillars
+          : INITIAL_CONTENT.aboutUs.pillars,
+    },
+    heroPlayers: heroPlayersMerged,
+    memberships: membershipsMerged,
+    clubInfo: {
+      ...INITIAL_CONTENT.clubInfo,
+      ...(parsed.clubInfo || {}),
+    },
+  };
+}
+
 interface ContentContextType {
   content: SiteContentState;
+  isSyncedCloud: boolean;
   updateHero: (hero: Partial<HeroData>) => void;
   updateAboutUs: (about: Partial<AboutUsData>) => void;
   updateHeroPlayers: (players: HeroPlayer[]) => void;
@@ -280,48 +331,27 @@ interface ContentContextType {
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
 export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isSyncedCloud, setIsSyncedCloud] = useState(false);
+  const saveTimerRef = React.useRef<number | null>(null);
+
   const [content, setContent] = useState<SiteContentState>(() => {
     try {
-      // Clean up legacy keys that contain obsolete headline
-      ['mc_site_content', 'mc_site_content_dynamic_v1', 'mc_site_content_dynamic_v2', 'mc_site_content_dynamic_v3'].forEach(k => {
-        try { localStorage.removeItem(k); } catch { /* ignore */ }
+      [
+        'mc_site_content',
+        'mc_site_content_dynamic_v1',
+        'mc_site_content_dynamic_v2',
+        'mc_site_content_dynamic_v3',
+      ].forEach((k) => {
+        try {
+          localStorage.removeItem(k);
+        } catch {
+          /* ignore */
+        }
       });
 
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        const heroMerged = { ...INITIAL_CONTENT.hero, ...(parsed.hero || {}) };
-        
-        // Sanitize any outdated headline containing 'Táctica'
-        if (heroMerged.headline && heroMerged.headline.some((w: string) => w.toLowerCase().includes('táctica') || w.toLowerCase().includes('tactica'))) {
-          heroMerged.headline = [...INITIAL_CONTENT.hero.headline];
-        }
-
-        // Ensure heroPlayers and 200 Bs memberships are always present
-        const heroPlayersMerged = (parsed.heroPlayers && parsed.heroPlayers.length > 0)
-          ? parsed.heroPlayers
-          : INITIAL_CONTENT.heroPlayers;
-
-        const membershipsMerged = (parsed.memberships && parsed.memberships.length > 0)
-          ? parsed.memberships.map((m: any) => ({ ...m, monthly: 200, features: m.features || [] }))
-          : INITIAL_CONTENT.memberships;
-
-        return {
-          ...INITIAL_CONTENT,
-          ...parsed,
-          hero: heroMerged,
-          aboutUs: {
-            ...INITIAL_CONTENT.aboutUs,
-            ...(parsed.aboutUs || {}),
-            pillars:
-              parsed.aboutUs?.pillars && parsed.aboutUs.pillars.length > 0
-                ? parsed.aboutUs.pillars
-                : INITIAL_CONTENT.aboutUs.pillars,
-          },
-          heroPlayers: heroPlayersMerged,
-          memberships: membershipsMerged,
-          clubInfo: { ...INITIAL_CONTENT.clubInfo, ...(parsed.clubInfo || {}), clubName: 'Club MC Emprender & Escuela de Fútbol Martín Careaga', slogan: 'Cumpliendo Sueños' },
-        };
+        return mergeWithInitial(JSON.parse(saved));
       }
     } catch {
       // fallback to initial
@@ -329,77 +359,142 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return INITIAL_CONTENT;
   });
 
+  // Real-time Firestore listener: pushes instant CMS updates to all visitors without clearing cache
   useEffect(() => {
+    const contentDocRef = doc(db, 'site_config', 'content');
+    const unsubscribe = onSnapshot(
+      contentDocRef,
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data && data.payload && typeof data.payload === 'object') {
+            const merged = mergeWithInitial(data.payload as Partial<SiteContentState>);
+            setContent(merged);
+            setIsSyncedCloud(true);
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            } catch {
+              // ignore quota error
+            }
+          }
+        } else {
+          setIsSyncedCloud(true);
+        }
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, 'site_config/content', false);
+      }
+    );
+
+    return () => {
+      unsubscribe();
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, []);
+
+  const persistToCloud = (nextState: SiteContentState) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
     } catch {
-      // storage quota or disabled
+      // ignore local storage quota
     }
-  }, [content]);
+
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    if (saveTimerRef.current !== null) {
+      window.clearTimeout(saveTimerRef.current);
+    }
+
+    saveTimerRef.current = window.setTimeout(async () => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+      try {
+        await setDoc(doc(db, 'site_config', 'content'), {
+          kind: 'content',
+          payload: stripUndefined(nextState),
+          updatedBy: uid,
+          updatedAt: serverTimestamp(),
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, 'site_config/content', false);
+      }
+    }, 350);
+  };
+
+  const applyContentUpdate = (updater: (prev: SiteContentState) => SiteContentState) => {
+    setContent((prev) => {
+      const next = updater(prev);
+      persistToCloud(next);
+      return next;
+    });
+  };
 
   const updateHero = (patch: Partial<HeroData>) => {
-    setContent((prev) => ({
+    applyContentUpdate((prev) => ({
       ...prev,
       hero: { ...prev.hero, ...patch },
     }));
   };
 
   const updateAboutUs = (patch: Partial<AboutUsData>) => {
-    setContent((prev) => ({
+    applyContentUpdate((prev) => ({
       ...prev,
       aboutUs: { ...prev.aboutUs, ...patch },
     }));
   };
 
   const updateHeroPlayers = (heroPlayers: HeroPlayer[]) => {
-    setContent((prev) => ({ ...prev, heroPlayers }));
+    applyContentUpdate((prev) => ({ ...prev, heroPlayers }));
   };
 
   const updateSquads = (squads: SquadItem[]) => {
-    setContent((prev) => ({ ...prev, squads }));
+    applyContentUpdate((prev) => ({ ...prev, squads }));
   };
 
   const updateMethodSteps = (methodSteps: MethodStep[]) => {
-    setContent((prev) => ({ ...prev, methodSteps }));
+    applyContentUpdate((prev) => ({ ...prev, methodSteps }));
   };
 
   const updateMethodMetrics = (methodMetrics: MethodMetric[]) => {
-    setContent((prev) => ({ ...prev, methodMetrics }));
+    applyContentUpdate((prev) => ({ ...prev, methodMetrics }));
   };
 
   const updateStaff = (staff: StaffMember[]) => {
-    setContent((prev) => ({ ...prev, staff }));
+    applyContentUpdate((prev) => ({ ...prev, staff }));
   };
 
   const updateMemberships = (memberships: MembershipPlan[]) => {
-    setContent((prev) => ({ ...prev, memberships }));
+    applyContentUpdate((prev) => ({ ...prev, memberships }));
   };
 
   const updateFaq = (faq: FaqItem[]) => {
-    setContent((prev) => ({ ...prev, faq }));
+    applyContentUpdate((prev) => ({ ...prev, faq }));
   };
 
   const updateDomains = (domains: string[]) => {
-    setContent((prev) => ({ ...prev, domains }));
+    applyContentUpdate((prev) => ({ ...prev, domains }));
   };
 
   const updateClaims = (claims: string[]) => {
-    setContent((prev) => ({ ...prev, claims }));
+    applyContentUpdate((prev) => ({ ...prev, claims }));
   };
 
   const updateClubInfo = (patch: Partial<ClubInfo>) => {
-    setContent((prev) => ({
+    applyContentUpdate((prev) => ({
       ...prev,
       clubInfo: { ...prev.clubInfo, ...patch },
     }));
   };
 
   const updateEvents = (events: ClubEvent[]) => {
-    setContent((prev) => ({ ...prev, events }));
+    applyContentUpdate((prev) => ({ ...prev, events }));
   };
 
   const resetAllContent = () => {
-    setContent(INITIAL_CONTENT);
+    applyContentUpdate(() => INITIAL_CONTENT);
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
@@ -414,12 +509,14 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const importContentJson = (jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString);
-      setContent((prev) => ({
-        ...prev,
-        ...parsed,
-        hero: { ...prev.hero, ...(parsed.hero || {}) },
-        clubInfo: { ...prev.clubInfo, ...(parsed.clubInfo || {}) },
-      }));
+      applyContentUpdate((prev) =>
+        mergeWithInitial({
+          ...prev,
+          ...parsed,
+          hero: { ...prev.hero, ...(parsed.hero || {}) },
+          clubInfo: { ...prev.clubInfo, ...(parsed.clubInfo || {}) },
+        })
+      );
       return true;
     } catch {
       return false;
@@ -430,6 +527,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ContentContext.Provider
       value={{
         content,
+        isSyncedCloud,
         updateHero,
         updateAboutUs,
         updateHeroPlayers,

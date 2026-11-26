@@ -1,0 +1,318 @@
+{
+  "entities": {
+    "SiteConfigDoc": {
+      "title": "SiteConfigDoc",
+      "description": "Public Club MC real-time configuration document (CMS content or live match center state).",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["content", "live_match"],
+          "maxLength": 32,
+          "description": "Type of site configuration document."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Structured map containing either CMS sections or live match data."
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "UID of the admin who last updated this configuration."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last update."
+        }
+      },
+      "required": ["kind", "payload", "updatedBy", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Official Club MC store product.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "enum": ["camisetas", "escuela", "entrenamiento", "accesorios"],
+          "maxLength": 32
+        },
+        "price": {
+          "type": "number"
+        },
+        "originalPrice": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1200
+        },
+        "badge": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "sizes": {
+          "type": "array"
+        },
+        "customizable": {
+          "type": "boolean"
+        },
+        "stock": {
+          "type": "number"
+        },
+        "rating": {
+          "type": "number"
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "category", "price", "description", "sizes", "stock", "rating", "updatedAt"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Club MC Primer Plantel or Escuela player profile.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "number": {
+          "type": "number"
+        },
+        "position": {
+          "type": "string",
+          "enum": ["Arquero", "Defensa", "Mediocampista", "Delantero", "Cuerpo Técnico"],
+          "maxLength": 32
+        },
+        "category": {
+          "type": "string",
+          "enum": ["primer-plantel", "escuela-juvenil", "staff", "sub-19", "sub-17", "sub-15", "sub-13", "sub-11", "sub-9", "sub-7"],
+          "maxLength": 32
+        },
+        "age": {
+          "type": "number"
+        },
+        "height": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "nationality": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "preferredFoot": {
+          "type": "string",
+          "enum": ["Derecho", "Izquierdo", "Ambidiestro"],
+          "maxLength": 32
+        },
+        "matchesPlayed": {
+          "type": "number"
+        },
+        "goals": {
+          "type": "number"
+        },
+        "assists": {
+          "type": "number"
+        },
+        "topSpeedKmH": {
+          "type": "number"
+        },
+        "passAccuracy": {
+          "type": "number"
+        },
+        "stamina": {
+          "type": "number"
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 1200
+        },
+        "image": {
+          "type": "string",
+          "maxLength": 500000
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "number", "position", "category", "age", "height", "nationality", "preferredFoot", "matchesPlayed", "goals", "assists", "topSpeedKmH", "passAccuracy", "stamina", "bio", "updatedAt"]
+    },
+    "NewsArticle": {
+      "title": "NewsArticle",
+      "description": "Club MC official news article.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 220
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Primer Plantel", "Escuela Formativa", "Institucional", "Club & Institucional", "Torneos"],
+          "maxLength": 48
+        },
+        "date": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "readTime": {
+          "type": "string",
+          "maxLength": 48
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "content": {
+          "type": "array"
+        },
+        "author": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "title", "category", "date", "readTime", "summary", "content", "author", "updatedAt"]
+    },
+    "AcademyLead": {
+      "title": "AcademyLead",
+      "description": "Private academy enrollment and contact inquiry containing PII (admin-only reads).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "ageCategory": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64
+        },
+        "parentName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "parentPhone": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 40
+        },
+        "branch": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "createdAtLabel": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Nuevo", "Contactado", "Prueba Asignada", "Inscrito"],
+          "maxLength": 32
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "studentName", "ageCategory", "parentName", "parentPhone", "branch", "createdAtLabel", "status", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized Club MC CMS administrator record.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 254
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "maxLength": 16
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/site_config/{docId}": {
+      "schema": { "$ref": "#/entities/SiteConfigDoc" },
+      "description": "Singleton configuration documents: 'content' (CMS sections) and 'live_match' (Match Center live state)."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Public store catalog items synced in real time."
+    },
+    "/players/{playerId}": {
+      "schema": { "$ref": "#/entities/Player" },
+      "description": "Public roster player profiles synced in real time."
+    },
+    "/news/{articleId}": {
+      "schema": { "$ref": "#/entities/NewsArticle" },
+      "description": "Public press and club news articles synced in real time."
+    },
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/AcademyLead" },
+      "description": "Private academy enrollment leads (PII isolated to verified admins only)."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Trusted RBAC registry of authorized Club MC administrators."
+    }
+  }
+}
