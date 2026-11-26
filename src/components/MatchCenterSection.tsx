@@ -41,33 +41,33 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
   return (
     <section id="match-center" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Tag & Title */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-neutral-800 gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-6 border-b border-slate-200 dark:border-neutral-800 gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-[#E6002B] uppercase tracking-wider mb-2">
             <span>Centro de Partidos Oficial</span>
             <span aria-hidden="true">·</span>
-            <span className="text-emerald-400 font-bold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               MINUTO {match.currentMinute}' EN DIRECTO
             </span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-display text-slate-900 dark:text-white tracking-tight">
             MATCH CENTER EN VIVO
           </h2>
-          <p className="text-sm text-neutral-400 mt-1 max-w-xl">
+          <p className="text-sm text-slate-600 dark:text-neutral-400 mt-1 max-w-xl">
             Sigue la pizarra táctica de Martín Careaga, la línea de tiempo jugada a jugada y las estadísticas biométricas en tiempo real.
           </p>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center gap-1 p-1 bg-neutral-900 border border-neutral-800 rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl">
           <button
             onClick={() => {
               playUiClick();
               setMatchTab('lineup');
             }}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-              matchTab === 'lineup' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              matchTab === 'lineup' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Alineación Táctica 4-3-3
@@ -78,7 +78,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
               setMatchTab('timeline');
             }}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-              matchTab === 'timeline' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              matchTab === 'timeline' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Línea de Tiempo
@@ -89,7 +89,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
               setMatchTab('stats');
             }}
             className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-              matchTab === 'stats' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-neutral-400 hover:text-white'
+              matchTab === 'stats' ? 'bg-[#E6002B] text-white shadow-sm' : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Estadísticas Avanzadas
@@ -98,19 +98,19 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
       </div>
 
       {/* Scoreboard Marquee Card */}
-      <div className="bg-[#0A0A0C] border border-neutral-800 rounded-2xl p-6 sm:p-8 mb-8 relative overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-[#0A0A0C] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 mb-8 relative overflow-hidden shadow-md dark:shadow-2xl">
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#E6002B] to-transparent" />
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
           {/* Home Team (MC) */}
           <div className="md:col-span-4 flex items-center justify-start md:justify-end gap-4 order-1 md:order-1">
             <div className="text-left md:text-right">
-              <h3 className="text-2xl sm:text-3xl font-black font-display text-white tracking-wide">
+              <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white tracking-wide">
                 MC MARTÍN CAREAGA
               </h3>
-              <span className="text-xs text-neutral-400">Primer Plantel Élite (Local)</span>
+              <span className="text-xs text-slate-500 dark:text-neutral-400">Primer Plantel Élite (Local)</span>
             </div>
-            <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-[#E6002B] flex items-center justify-center text-white font-display font-black text-2xl shadow-lg shadow-[#E6002B]/20 shrink-0">
+            <div className="w-16 h-16 rounded-xl bg-slate-900 dark:bg-neutral-900 border border-[#E6002B] flex items-center justify-center text-white font-display font-black text-2xl shadow-lg shadow-[#E6002B]/20 shrink-0">
               MC
             </div>
           </div>
@@ -118,35 +118,35 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
           {/* Central Live Score Display */}
           <div className="md:col-span-4 flex flex-col items-center justify-center order-3 md:order-2 py-2">
             <div className="flex items-center gap-4">
-              <span className="text-5xl sm:text-6xl font-black font-mono-numbers text-white">
+              <span className="text-5xl sm:text-6xl font-black font-mono-numbers text-slate-950 dark:text-white">
                 {match.scoreHome}
               </span>
-              <span className="text-2xl font-light text-neutral-600">:</span>
-              <span className="text-5xl sm:text-6xl font-mono-numbers font-black text-neutral-400">
+              <span className="text-2xl font-light text-slate-400 dark:text-neutral-600">:</span>
+              <span className="text-5xl sm:text-6xl font-mono-numbers font-black text-slate-400 dark:text-neutral-400">
                 {match.scoreAway}
               </span>
             </div>
 
             <div className="mt-3 flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-800 text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <span className="px-2.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
                 MIN {match.currentMinute}'
               </span>
-              <span className="text-xs text-neutral-400">{match.competition}</span>
+              <span className="text-xs text-slate-600 dark:text-neutral-400">{match.competition}</span>
             </div>
-            <span className="text-[11px] text-neutral-500 mt-1">{match.venue}</span>
+            <span className="text-[11px] text-slate-500 dark:text-neutral-500 mt-1">{match.venue}</span>
           </div>
 
           {/* Away Team */}
           <div className="md:col-span-4 flex items-center justify-start gap-4 order-2 md:order-3">
-            <div className="w-16 h-16 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center text-neutral-300 font-display font-black text-2xl shrink-0">
+            <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 flex items-center justify-center text-slate-700 dark:text-neutral-300 font-display font-black text-2xl shrink-0">
               MET
             </div>
             <div>
-              <h3 className="text-2xl sm:text-3xl font-black font-display text-neutral-200 tracking-wide">
+              <h3 className="text-2xl sm:text-3xl font-black font-display text-slate-700 dark:text-neutral-200 tracking-wide">
                 ATL. METROPOLITANO
               </h3>
-              <span className="text-xs text-neutral-500">Visitante</span>
+              <span className="text-xs text-slate-500 dark:text-neutral-500">Visitante</span>
             </div>
           </div>
         </div>
@@ -156,14 +156,14 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
       {matchTab === 'lineup' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Tactical Pitch Canvas */}
-          <div className="lg:col-span-8 bg-[#08080A] border border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden">
+          <div className="lg:col-span-8 bg-white dark:bg-[#08080A] border border-slate-200 dark:border-neutral-800 rounded-2xl p-4 sm:p-6 shadow-md dark:shadow-xl relative overflow-hidden">
             <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-white uppercase tracking-wider">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-wider">
                   Esquema Táctico Martín Careaga: 4-3-3 Ofensivo
                 </span>
-                <span className="text-neutral-500">·</span>
-                <span className="text-xs text-neutral-400">Toca un jugador para ver rol táctico</span>
+                <span className="text-slate-400 dark:text-neutral-500">·</span>
+                <span className="text-xs text-slate-500 dark:text-neutral-400">Toca un jugador para ver rol táctico</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -173,8 +173,8 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                   }}
                   className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
                     pitch3D
-                      ? 'border-[#E6002B] bg-[#E6002B]/10 text-white'
-                      : 'border-neutral-700 bg-neutral-900 text-neutral-400'
+                      ? 'border-[#E6002B] bg-[#E6002B]/10 text-[#E6002B] dark:text-white'
+                      : 'border-slate-300 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400'
                   }`}
                   title="Conmutar entre perspectiva 3D e isométrica o vista plana 2D"
                 >
@@ -184,7 +184,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                   onClick={() => {
                     playGoalCheer();
                   }}
-                  className="text-xs text-[#E6002B] hover:text-[#FF1A40] flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-xs text-[#E6002B] hover:text-[#FF1A40] flex items-center gap-1 transition-colors cursor-pointer font-semibold"
                 >
                   <Activity className="w-3.5 h-3.5" />
                   <span>Simular Pitazo</span>
@@ -194,9 +194,9 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
 
             {/* Tactical Pitch Visual (Interactive SVG with grass cut stripes & 3D gradient) */}
             <div
-              className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-neutral-800 bg-[#0A1A0F] transition-all duration-700 ${
+              className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-slate-300 dark:border-neutral-800 bg-[#0A1A0F] transition-all duration-700 ${
                 pitch3D
-                  ? 'perspective-1000 shadow-[0_25px_50px_rgba(0,0,0,0.85)] ring-1 ring-[#E6002B]/30'
+                  ? 'perspective-1000 shadow-[0_25px_50px_rgba(0,0,0,0.45)] dark:shadow-[0_25px_50px_rgba(0,0,0,0.85)] ring-1 ring-[#E6002B]/30'
                   : ''
               }`}
               style={
@@ -262,12 +262,10 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                         setSelectedTacticalPlayer(tp);
                       }}
                     >
-                      {/* Pulse aura if selected */}
                       {isSelected && (
                         <circle cx="0" cy="0" r="28" fill="#E6002B" opacity="0.35" />
                       )}
 
-                      {/* Main Node */}
                       <circle
                         cx="0"
                         cy="0"
@@ -277,7 +275,6 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                         strokeWidth="2.5"
                       />
 
-                      {/* Number */}
                       <text
                         x="0"
                         y="5"
@@ -290,7 +287,6 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                         {tp.number}
                       </text>
 
-                      {/* Player Name Pill */}
                       <rect
                         x="-38"
                         y="22"
@@ -298,14 +294,14 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                         height="18"
                         rx="4"
                         fill="#060608"
-                        fillOpacity="0.85"
-                        stroke={isSelected ? '#E6002B' : '#222'}
+                        fillOpacity="0.88"
+                        stroke={isSelected ? '#E6002B' : '#333'}
                         strokeWidth="1"
                       />
                       <text
                         x="0"
                         y="34"
-                        fill={isSelected ? '#FF1A40' : '#D1D5DB'}
+                        fill={isSelected ? '#FF4D6D' : '#F3F4F6'}
                         fontFamily="Plus Jakarta Sans, sans-serif"
                         fontWeight="600"
                         fontSize="10"
@@ -321,48 +317,48 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
           </div>
 
           {/* Tactical Player Details & Strategy Inspector */}
-          <div className="lg:col-span-4 bg-[#0A0A0C] border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col gap-5">
-            <div className="border-b border-neutral-800 pb-4">
+          <div className="lg:col-span-4 bg-white dark:bg-[#0A0A0C] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 shadow-md dark:shadow-xl flex flex-col gap-5">
+            <div className="border-b border-slate-200 dark:border-neutral-800 pb-4">
               <span className="text-xs uppercase tracking-wider text-[#E6002B] font-semibold block mb-1">
                 Instrucción Táctica Personalizada
               </span>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-neutral-900 border border-[#E6002B] flex items-center justify-center text-white font-display font-black text-2xl">
+                <div className="w-12 h-12 rounded-xl bg-slate-900 dark:bg-neutral-900 border border-[#E6002B] flex items-center justify-center text-white font-display font-black text-2xl">
                   #{selectedTacticalPlayer.number}
                 </div>
                 <div>
-                  <h4 className="text-xl font-bold font-display text-white">{selectedTacticalPlayer.name}</h4>
-                  <span className="text-xs text-neutral-400 font-medium">{selectedTacticalPlayer.role}</span>
+                  <h4 className="text-xl font-bold font-display text-slate-900 dark:text-white">{selectedTacticalPlayer.name}</h4>
+                  <span className="text-xs text-slate-500 dark:text-neutral-400 font-medium">{selectedTacticalPlayer.role}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h5 className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mb-2">
+              <h5 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-neutral-400 mb-2">
                 Pauta Táctica de Martín Careaga:
               </h5>
-              <div className="p-4 bg-neutral-900/60 border border-neutral-800 rounded-xl text-sm text-neutral-200 leading-relaxed italic">
+              <div className="p-4 bg-slate-50 dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 rounded-xl text-sm text-slate-700 dark:text-neutral-200 leading-relaxed italic">
                 "{selectedTacticalPlayer.instruction}"
               </div>
             </div>
 
             <div className="space-y-3 pt-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-400">Intensidad de Presión</span>
-                <span className="font-mono-numbers text-white font-bold">Alta (Zonificación 1/3)</span>
+                <span className="text-slate-500 dark:text-neutral-400">Intensidad de Presión</span>
+                <span className="font-mono-numbers text-slate-900 dark:text-white font-bold">Alta (Zonificación 1/3)</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-400">Distancia Media Recorrida</span>
+                <span className="text-slate-500 dark:text-neutral-400">Distancia Media Recorrida</span>
                 <span className="font-mono-numbers text-[#E6002B] font-bold">9.4 km</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-neutral-400">Tasa de Duelos Ganados</span>
-                <span className="font-mono-numbers text-emerald-400 font-bold">78%</span>
+                <span className="text-slate-500 dark:text-neutral-400">Tasa de Duelos Ganados</span>
+                <span className="font-mono-numbers text-emerald-600 dark:text-emerald-400 font-bold">78%</span>
               </div>
             </div>
 
-            <div className="mt-2 pt-4 border-t border-neutral-800">
-              <span className="text-[11px] text-neutral-500 block leading-tight">
+            <div className="mt-2 pt-4 border-t border-slate-200 dark:border-neutral-800">
+              <span className="text-[11px] text-slate-500 dark:text-neutral-500 block leading-tight">
                 *Datos transmitidos por el sistema de telemetría GPS del cuerpo técnico del Club MC.
               </span>
             </div>
@@ -372,12 +368,12 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
 
       {/* Match Timeline Content */}
       {matchTab === 'timeline' && (
-        <div className="bg-[#0A0A0C] border border-neutral-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-xl">
-          <h3 className="text-lg font-bold font-display text-white mb-6">
+        <div className="bg-white dark:bg-[#0A0A0C] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-md dark:shadow-xl">
+          <h3 className="text-lg font-bold font-display text-slate-900 dark:text-white mb-6">
             LÍNEA DE TIEMPO · MINUTO A MINUTO
           </h3>
 
-          <div className="relative pl-6 sm:pl-8 border-l border-neutral-800 space-y-6">
+          <div className="relative pl-6 sm:pl-8 border-l border-slate-200 dark:border-neutral-800 space-y-6">
             {match.timeline.map((event: MatchEvent, idx: number) => (
               <div key={idx} className="relative group">
                 {/* Minute Marker Badge */}
@@ -387,24 +383,24 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                       ? 'bg-[#E6002B] border-[#FF1A40] text-white shadow-[#E6002B]/40'
                       : event.type === 'card-yellow'
                       ? 'bg-amber-400 border-amber-300 text-black'
-                      : 'bg-neutral-900 border-neutral-700 text-neutral-300'
+                      : 'bg-white dark:bg-neutral-900 border-slate-300 dark:border-neutral-700 text-slate-700 dark:text-neutral-300'
                   }`}
                 >
                   {event.minute}'
                 </div>
 
-                <div className="bg-neutral-900/50 border border-neutral-800/80 rounded-xl p-4 transition-all group-hover:border-neutral-700">
+                <div className="bg-slate-50 dark:bg-neutral-900/50 border border-slate-200 dark:border-neutral-800/80 rounded-xl p-4 transition-all group-hover:border-slate-300 dark:group-hover:border-neutral-700">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       {event.type === 'goal' && <Flame className="w-4 h-4 text-[#E6002B]" />}
                       {event.player}
                     </span>
-                    <span className="text-xs uppercase font-semibold text-neutral-400">
+                    <span className="text-xs uppercase font-semibold text-slate-500 dark:text-neutral-400">
                       {event.team === 'home' ? 'MC Martín Careaga' : 'Atl. Metropolitano'}
                     </span>
                   </div>
                   {event.assistOrDetail && (
-                    <p className="text-xs text-neutral-400 mt-0.5">{event.assistOrDetail}</p>
+                    <p className="text-xs text-slate-600 dark:text-neutral-400 mt-0.5">{event.assistOrDetail}</p>
                   )}
                 </div>
               </div>
@@ -415,8 +411,8 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
 
       {/* Advanced Match Stats */}
       {matchTab === 'stats' && (
-        <div className="bg-[#0A0A0C] border border-neutral-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-xl">
-          <h3 className="text-lg font-bold font-display text-white mb-6">
+        <div className="bg-white dark:bg-[#0A0A0C] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-md dark:shadow-xl">
+          <h3 className="text-lg font-bold font-display text-slate-900 dark:text-white mb-6">
             COMPARADOR DE RENDIMIENTO EN VIVO
           </h3>
 
@@ -424,17 +420,17 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
             {/* Possession */}
             <div>
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-                <span className="text-white font-mono-numbers text-sm">{match.stats.possessionHome}%</span>
-                <span className="text-neutral-400 uppercase tracking-wider">Posesión de Balón</span>
-                <span className="text-neutral-400 font-mono-numbers text-sm">{match.stats.possessionAway}%</span>
+                <span className="text-slate-900 dark:text-white font-mono-numbers text-sm">{match.stats.possessionHome}%</span>
+                <span className="text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Posesión de Balón</span>
+                <span className="text-slate-500 dark:text-neutral-400 font-mono-numbers text-sm">{match.stats.possessionAway}%</span>
               </div>
-              <div className="w-full h-3 bg-neutral-900 rounded-full flex overflow-hidden">
+              <div className="w-full h-3 bg-slate-200 dark:bg-neutral-900 rounded-full flex overflow-hidden">
                 <div
                   className="bg-[#E6002B] h-full transition-all duration-700"
                   style={{ width: `${match.stats.possessionHome}%` }}
                 />
                 <div
-                  className="bg-neutral-600 h-full transition-all duration-700"
+                  className="bg-slate-400 dark:bg-neutral-600 h-full transition-all duration-700"
                   style={{ width: `${match.stats.possessionAway}%` }}
                 />
               </div>
@@ -443,11 +439,11 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
             {/* Shots Total */}
             <div>
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-                <span className="text-white font-mono-numbers text-sm">{match.stats.shotsHome}</span>
-                <span className="text-neutral-400 uppercase tracking-wider">Tiros Totales</span>
-                <span className="text-neutral-400 font-mono-numbers text-sm">{match.stats.shotsAway}</span>
+                <span className="text-slate-900 dark:text-white font-mono-numbers text-sm">{match.stats.shotsHome}</span>
+                <span className="text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Tiros Totales</span>
+                <span className="text-slate-500 dark:text-neutral-400 font-mono-numbers text-sm">{match.stats.shotsAway}</span>
               </div>
-              <div className="w-full h-2.5 bg-neutral-900 rounded-full flex overflow-hidden">
+              <div className="w-full h-2.5 bg-slate-200 dark:bg-neutral-900 rounded-full flex overflow-hidden">
                 <div
                   className="bg-[#E6002B] h-full"
                   style={{
@@ -455,7 +451,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                   }}
                 />
                 <div
-                  className="bg-neutral-600 h-full"
+                  className="bg-slate-400 dark:bg-neutral-600 h-full"
                   style={{
                     width: `${(match.stats.shotsAway / (match.stats.shotsHome + match.stats.shotsAway)) * 100}%`
                   }}
@@ -466,11 +462,11 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
             {/* Shots On Target */}
             <div>
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-                <span className="text-white font-mono-numbers text-sm">{match.stats.shotsOnTargetHome}</span>
-                <span className="text-neutral-400 uppercase tracking-wider">Tiros al Arco</span>
-                <span className="text-neutral-400 font-mono-numbers text-sm">{match.stats.shotsOnTargetAway}</span>
+                <span className="text-slate-900 dark:text-white font-mono-numbers text-sm">{match.stats.shotsOnTargetHome}</span>
+                <span className="text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Tiros al Arco</span>
+                <span className="text-slate-500 dark:text-neutral-400 font-mono-numbers text-sm">{match.stats.shotsOnTargetAway}</span>
               </div>
-              <div className="w-full h-2.5 bg-neutral-900 rounded-full flex overflow-hidden">
+              <div className="w-full h-2.5 bg-slate-200 dark:bg-neutral-900 rounded-full flex overflow-hidden">
                 <div
                   className="bg-[#E6002B] h-full"
                   style={{
@@ -478,7 +474,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                   }}
                 />
                 <div
-                  className="bg-neutral-600 h-full"
+                  className="bg-slate-400 dark:bg-neutral-600 h-full"
                   style={{
                     width: `${(match.stats.shotsOnTargetAway / (match.stats.shotsOnTargetHome + match.stats.shotsOnTargetAway)) * 100}%`
                   }}
@@ -489,11 +485,11 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
             {/* xG (Expected Goals) */}
             <div>
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-                <span className="text-white font-mono-numbers text-sm">{match.stats.xGHome}</span>
-                <span className="text-neutral-400 uppercase tracking-wider">Goles Esperados (xG)</span>
-                <span className="text-neutral-400 font-mono-numbers text-sm">{match.stats.xGAway}</span>
+                <span className="text-slate-900 dark:text-white font-mono-numbers text-sm">{match.stats.xGHome}</span>
+                <span className="text-slate-500 dark:text-neutral-400 uppercase tracking-wider">Goles Esperados (xG)</span>
+                <span className="text-slate-500 dark:text-neutral-400 font-mono-numbers text-sm">{match.stats.xGAway}</span>
               </div>
-              <div className="w-full h-2.5 bg-neutral-900 rounded-full flex overflow-hidden">
+              <div className="w-full h-2.5 bg-slate-200 dark:bg-neutral-900 rounded-full flex overflow-hidden">
                 <div
                   className="bg-[#E6002B] h-full"
                   style={{
@@ -501,7 +497,7 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
                   }}
                 />
                 <div
-                  className="bg-neutral-600 h-full"
+                  className="bg-slate-400 dark:bg-neutral-600 h-full"
                   style={{
                     width: `${(match.stats.xGAway / (match.stats.xGHome + match.stats.xGAway)) * 100}%`
                   }}
@@ -510,22 +506,22 @@ export const MatchCenterSection: React.FC<MatchCenterSectionProps> = ({ match: p
             </div>
 
             {/* Corners & Fouls */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-800 text-center">
-              <div className="p-3 bg-neutral-900/60 rounded-xl border border-neutral-800">
-                <span className="text-[10px] text-neutral-500 uppercase block">Tiros de Esquina</span>
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-neutral-800 text-center">
+              <div className="p-3 bg-slate-50 dark:bg-neutral-900/60 rounded-xl border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 dark:text-neutral-500 uppercase block">Tiros de Esquina</span>
                 <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="font-bold text-white font-mono-numbers">{match.stats.cornersHome}</span>
-                  <span className="text-xs text-neutral-500">vs</span>
-                  <span className="font-bold text-neutral-400 font-mono-numbers">{match.stats.cornersAway}</span>
+                  <span className="font-bold text-slate-900 dark:text-white font-mono-numbers">{match.stats.cornersHome}</span>
+                  <span className="text-xs text-slate-400 dark:text-neutral-500">vs</span>
+                  <span className="font-bold text-slate-500 dark:text-neutral-400 font-mono-numbers">{match.stats.cornersAway}</span>
                 </div>
               </div>
 
-              <div className="p-3 bg-neutral-900/60 rounded-xl border border-neutral-800">
-                <span className="text-[10px] text-neutral-500 uppercase block">Faltas Cometidas</span>
+              <div className="p-3 bg-slate-50 dark:bg-neutral-900/60 rounded-xl border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 dark:text-neutral-500 uppercase block">Faltas Cometidas</span>
                 <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="font-bold text-white font-mono-numbers">{match.stats.foulsHome}</span>
-                  <span className="text-xs text-neutral-500">vs</span>
-                  <span className="font-bold text-neutral-400 font-mono-numbers">{match.stats.foulsAway}</span>
+                  <span className="font-bold text-slate-900 dark:text-white font-mono-numbers">{match.stats.foulsHome}</span>
+                  <span className="text-xs text-slate-400 dark:text-neutral-500">vs</span>
+                  <span className="font-bold text-slate-500 dark:text-neutral-400 font-mono-numbers">{match.stats.foulsAway}</span>
                 </div>
               </div>
             </div>

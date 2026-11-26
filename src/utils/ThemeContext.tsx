@@ -20,7 +20,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {
       // ignore
     }
-    return 'dark'; // Default: noche
+    return 'dark';
   });
 
   useEffect(() => {
@@ -32,11 +32,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const root = document.documentElement;
     if (theme === 'light') {
-      root.classList.add('light-pitch');
       root.classList.remove('dark');
+      root.classList.add('light');
       root.setAttribute('data-theme', 'light');
     } else {
-      root.classList.remove('light-pitch');
+      root.classList.remove('light');
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
     }

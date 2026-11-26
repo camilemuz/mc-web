@@ -11,6 +11,7 @@ import {
   CLAIMS as DEFAULT_CLAIMS,
   SquadItem,
 } from '../content';
+export type { SquadItem };
 import { EVENTS_DATA as DEFAULT_EVENTS } from '../data/mockData';
 import { ClubEvent } from '../types';
 
@@ -80,6 +81,62 @@ export interface ClubInfo {
   facebook: string;
 }
 
+export interface AboutPillar {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface AboutUsData {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  missionTitle: string;
+  missionBody: string;
+  visionTitle: string;
+  visionBody: string;
+  pillars: AboutPillar[];
+}
+
+export const DEFAULT_ABOUT_US: AboutUsData = {
+  kicker: 'Identidad Institucional · Club MC',
+  title: 'FORMAMOS PERSONAS, PROYECTAMOS TALENTOS',
+  subtitle:
+    'Más que una escuela de fútbol: una comunidad formativa en Bolivia que acompaña el crecimiento integral de cada niño y joven hacia el fútbol profesional.',
+  missionTitle: 'Misión',
+  missionBody:
+    'Formar integralmente a niños y jóvenes a través del deporte, potenciando sus habilidades deportivas junto con su desarrollo emocional, espiritual y social.',
+  visionTitle: 'Visión',
+  visionBody:
+    'Consolidarnos como un club referente en Bolivia que proyecte a jóvenes talentos hacia la máxima categoría del fútbol profesional, brindándoles las herramientas necesarias para representar al país mientras crecemos y evolucionamos junto a ellos.',
+  pillars: [
+    {
+      id: 'deportivo',
+      title: 'Deportivo',
+      description:
+        'Metodología táctica y técnica avalada por la FBF para maximizar el potencial competitivo desde la base hasta la élite.',
+    },
+    {
+      id: 'emocional',
+      title: 'Emocional',
+      description:
+        'Acompañamiento para fortalecer la confianza, el autocontrol, la disciplina y la resiliencia dentro y fuera de la cancha.',
+    },
+    {
+      id: 'espiritual',
+      title: 'Espiritual',
+      description:
+        'Formación en valores, propósito de vida, humildad en la victoria y gratitud en cada etapa del proceso formativo.',
+    },
+    {
+      id: 'social',
+      title: 'Social',
+      description:
+        'Trabajo en equipo, respeto mutuo y sentido de pertenencia junto a familias comprometidas con el sueño de cada jugador.',
+    },
+  ],
+};
+
 export interface HeroPlayer {
   id: string;
   name: string;
@@ -136,6 +193,7 @@ export const DEFAULT_HERO_PLAYERS: HeroPlayer[] = [
 
 export interface SiteContentState {
   hero: HeroData;
+  aboutUs: AboutUsData;
   heroPlayers: HeroPlayer[];
   squads: SquadItem[];
   methodSteps: MethodStep[];
@@ -180,6 +238,10 @@ const INITIAL_CONTENT: SiteContentState = {
     avgScore: { ...DEFAULT_HERO.avgScore },
     insight: { ...DEFAULT_HERO.insight },
   },
+  aboutUs: {
+    ...DEFAULT_ABOUT_US,
+    pillars: DEFAULT_ABOUT_US.pillars.map((p) => ({ ...p })),
+  },
   heroPlayers: DEFAULT_HERO_PLAYERS.map((p) => ({ ...p })),
   squads: DEFAULT_SQUADS.map((s) => ({ ...s, metrics: s.metrics.map((m) => ({ ...m })) })),
   methodSteps: DEFAULT_METHOD_STEPS.map((s) => ({ ...s })),
@@ -198,6 +260,7 @@ const STORAGE_KEY = 'mc_site_content_dynamic_v6';
 interface ContentContextType {
   content: SiteContentState;
   updateHero: (hero: Partial<HeroData>) => void;
+  updateAboutUs: (about: Partial<AboutUsData>) => void;
   updateHeroPlayers: (players: HeroPlayer[]) => void;
   updateSquads: (squads: SquadItem[]) => void;
   updateMethodSteps: (steps: MethodStep[]) => void;
@@ -247,6 +310,14 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
           ...INITIAL_CONTENT,
           ...parsed,
           hero: heroMerged,
+          aboutUs: {
+            ...INITIAL_CONTENT.aboutUs,
+            ...(parsed.aboutUs || {}),
+            pillars:
+              parsed.aboutUs?.pillars && parsed.aboutUs.pillars.length > 0
+                ? parsed.aboutUs.pillars
+                : INITIAL_CONTENT.aboutUs.pillars,
+          },
           heroPlayers: heroPlayersMerged,
           memberships: membershipsMerged,
           clubInfo: { ...INITIAL_CONTENT.clubInfo, ...(parsed.clubInfo || {}), clubName: 'Club MC Emprender & Escuela de Fútbol Martín Careaga', slogan: 'Cumpliendo Sueños' },
@@ -270,6 +341,13 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setContent((prev) => ({
       ...prev,
       hero: { ...prev.hero, ...patch },
+    }));
+  };
+
+  const updateAboutUs = (patch: Partial<AboutUsData>) => {
+    setContent((prev) => ({
+      ...prev,
+      aboutUs: { ...prev.aboutUs, ...patch },
     }));
   };
 
@@ -353,6 +431,7 @@ export const ContentProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         content,
         updateHero,
+        updateAboutUs,
         updateHeroPlayers,
         updateSquads,
         updateMethodSteps,

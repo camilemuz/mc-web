@@ -66,10 +66,10 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
   const currentTheme = kitStyles[kitTheme];
 
   return (
-    <div className="bg-[#0A0A0C] border border-neutral-800 rounded-2xl p-6 lg:p-8 relative overflow-hidden shadow-2xl">
-      {/* Background glow and carbon texture */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-[#E6002B]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-black/40 rounded-full blur-3xl pointer-events-none" />
+    <div className="bg-white dark:bg-[#0A0A0C] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 lg:p-8 relative overflow-hidden shadow-md dark:shadow-2xl">
+      {/* Background glow — subtle in dark mode */}
+      <div className="hidden dark:block absolute top-0 right-0 w-96 h-96 bg-[#E6002B]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="hidden dark:block absolute bottom-0 left-0 w-96 h-96 bg-black/40 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* 3D Canvas / Interactive Jersey Display Area */}
@@ -79,15 +79,15 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
               <span className="text-xs uppercase tracking-wider font-semibold text-[#E6002B]">
                 Simulador 3D Interactivo
               </span>
-              <span className="text-neutral-500">·</span>
-              <span className="text-xs text-neutral-400">
+              <span className="text-slate-400 dark:text-neutral-500">·</span>
+              <span className="text-xs text-slate-500 dark:text-neutral-400">
                 {isBackView ? 'Vista Dorsal (Espalda)' : 'Vista Frontal (Pecho)'}
               </span>
             </div>
 
             <button
               onClick={handleFlip}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-200 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 rounded-lg transition-all active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-neutral-200 bg-slate-100 hover:bg-slate-200 dark:bg-neutral-900 dark:hover:bg-neutral-800 border border-slate-300 dark:border-neutral-700 rounded-lg transition-all active:scale-95 cursor-pointer"
               title="Girar camiseta 180°"
             >
               <RotateCw className="w-3.5 h-3.5 text-[#E6002B]" />
@@ -114,7 +114,7 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
               >
                 <svg
                   viewBox="0 0 500 560"
-                  className="w-full h-full filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.8)]"
+                  className="w-full h-full filter drop-shadow-[0_18px_22px_rgba(15,23,42,0.28)] dark:drop-shadow-[0_20px_25px_rgba(0,0,0,0.8)]"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -129,7 +129,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     </clipPath>
                   </defs>
 
-                  {/* Base Jersey Silhouette */}
                   <path
                     d="M150 40 L210 70 Q250 85 290 70 L350 40 L450 120 L400 200 L360 170 L360 480 Q250 500 140 480 L140 170 L100 200 L50 120 Z"
                     fill={currentTheme.primary}
@@ -137,16 +136,13 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     strokeWidth="3"
                   />
 
-                  {/* Stripes & Patterns inside Clip */}
                   <g clipPath="url(#frontJerseyClip)">
                     {kitTheme === 'home' && (
                       <>
-                        {/* Red and Black Vertical Stripes */}
                         <rect x="140" y="0" width="55" height="520" fill="#0D0D0F" />
                         <rect x="195" y="0" width="55" height="520" fill="#E6002B" />
                         <rect x="250" y="0" width="55" height="520" fill="#0D0D0F" />
                         <rect x="305" y="0" width="55" height="520" fill="#E6002B" />
-                        {/* Sleeves */}
                         <path d="M50 120 L150 40 L140 170 L100 200 Z" fill="#0D0D0F" />
                         <path d="M450 120 L350 40 L360 170 L400 200 Z" fill="#0D0D0F" />
                       </>
@@ -154,7 +150,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
 
                     {kitTheme === 'away' && (
                       <>
-                        {/* Diagonal Sash */}
                         <polygon points="140,400 360,100 360,160 140,460" fill="#E6002B" opacity="0.9" />
                         <polygon points="140,460 360,160 360,175 140,475" fill="#1A1A1E" opacity="0.8" />
                       </>
@@ -162,18 +157,15 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
 
                     {kitTheme === 'blackout' && (
                       <>
-                        {/* Modern geometric honeycomb / carbon lines */}
                         <line x1="250" y1="70" x2="250" y2="480" stroke="#FF1A40" strokeWidth="2" strokeDasharray="6 6" />
                         <line x1="200" y1="70" x2="200" y2="480" stroke="#222" strokeWidth="1" />
                         <line x1="300" y1="70" x2="300" y2="480" stroke="#222" strokeWidth="1" />
                       </>
                     )}
 
-                    {/* Shading Overlay */}
                     <rect x="0" y="0" width="500" height="520" fill="url(#jerseyShadeFront)" />
                   </g>
 
-                  {/* Collar */}
                   <path
                     d="M210 70 Q250 100 290 70 L285 55 Q250 80 215 55 Z"
                     fill={currentTheme.collar}
@@ -181,7 +173,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     strokeWidth="1.5"
                   />
 
-                  {/* Official Club Badge (Left Chest) */}
                   <g transform="translate(180, 150)">
                     <path
                       d="M0,0 L36,0 L36,36 Q18,52 0,36 Z"
@@ -203,13 +194,11 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     </text>
                   </g>
 
-                  {/* Technical Brand Logo (Right Chest) */}
                   <g transform="translate(290, 158)">
                     <polygon points="0,15 15,0 30,15" fill={currentTheme.collar} />
                     <circle cx="15" cy="22" r="3" fill="#E6002B" />
                   </g>
 
-                  {/* Center Main Sponsor "CAREAGA" */}
                   <g transform="translate(250, 260)">
                     <rect x="-85" y="-18" width="170" height="36" rx="4" fill="#000000" fillOpacity="0.45" />
                     <text
@@ -238,7 +227,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     </text>
                   </g>
 
-                  {/* Sleeve Patch (Right Arm) */}
                   {hasSleeveBadge && (
                     <g transform="translate(390, 140)">
                       <circle cx="14" cy="14" r="14" fill="#000" stroke="#FFD700" strokeWidth="1.5" />
@@ -260,7 +248,7 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
               >
                 <svg
                   viewBox="0 0 500 560"
-                  className="w-full h-full filter drop-shadow-[0_20px_25px_rgba(0,0,0,0.8)]"
+                  className="w-full h-full filter drop-shadow-[0_18px_22px_rgba(15,23,42,0.28)] dark:drop-shadow-[0_20px_25px_rgba(0,0,0,0.8)]"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
@@ -275,7 +263,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     </linearGradient>
                   </defs>
 
-                  {/* Silhouette */}
                   <path
                     d="M150 40 L210 60 Q250 68 290 60 L350 40 L450 120 L400 200 L360 170 L360 480 Q250 500 140 480 L140 170 L100 200 L50 120 Z"
                     fill={currentTheme.primary}
@@ -283,7 +270,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     strokeWidth="3"
                   />
 
-                  {/* Inner Pattern */}
                   <g clipPath="url(#backJerseyClip)">
                     {kitTheme === 'home' && (
                       <>
@@ -293,7 +279,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                         <rect x="305" y="0" width="55" height="520" fill="#E6002B" />
                         <path d="M50 120 L150 40 L140 170 L100 200 Z" fill="#0D0D0F" />
                         <path d="M450 120 L350 40 L360 170 L400 200 Z" fill="#0D0D0F" />
-                        {/* Solid Number Plate Box for enhanced readability if needed */}
                         <rect x="160" y="100" width="180" height="280" fill="#0D0D0F" fillOpacity="0.88" rx="10" />
                       </>
                     )}
@@ -309,22 +294,20 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     <rect x="0" y="0" width="500" height="520" fill="url(#jerseyShadeBack)" />
                   </g>
 
-                  {/* Collar Back */}
                   <path
                     d="M210 60 Q250 68 290 60 L285 45 Q250 52 215 45 Z"
                     fill={currentTheme.collar}
                   />
 
-                  {/* Small Argentine / Club Flag at upper neck */}
+                  {/* Small Bolivia Flag at upper neck */}
                   <g transform="translate(240, 75)">
-                    <rect x="0" y="0" width="20" height="6" fill="#75AADB" />
-                    <rect x="0" y="6" width="20" height="6" fill="#FFFFFF" />
-                    <rect x="0" y="12" width="20" height="6" fill="#75AADB" />
+                    <rect x="0" y="0" width="20" height="6" fill="#D52B1E" />
+                    <rect x="0" y="6" width="20" height="6" fill="#F9E300" />
+                    <rect x="0" y="12" width="20" height="6" fill="#007934" />
                   </g>
 
                   {/* DYNAMIC CUSTOM NAME */}
                   <g transform="translate(250, 150)">
-                    {/* Shadow layer */}
                     <text
                       x="2"
                       y="2"
@@ -338,7 +321,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     >
                       {customName.toUpperCase().trim() || 'MC'}
                     </text>
-                    {/* Main layer */}
                     <text
                       x="0"
                       y="0"
@@ -355,7 +337,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
 
                   {/* DYNAMIC CUSTOM NUMBER */}
                   <g transform="translate(250, 290)">
-                    {/* Shadow layer */}
                     <text
                       x="5"
                       y="5"
@@ -368,7 +349,6 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     >
                       {customNumber}
                     </text>
-                    {/* Main stroke & fill */}
                     <text
                       x="0"
                       y="0"
@@ -382,11 +362,9 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     >
                       {customNumber}
                     </text>
-                    {/* Tiny MC logo embedded in the number base */}
                     <circle cx="0" cy="18" r="6" fill="#E6002B" />
                   </g>
 
-                  {/* Lower Back Sponsor / Slogan */}
                   <text
                     x="250"
                     y="435"
@@ -397,7 +375,7 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                     letterSpacing="3"
                     textAnchor="middle"
                   >
-                    MARTÍN CAREAGA · PASIÓN & DISCIPLINA
+                    MARTÍN CAREAGA · CUMPLIENDO SUEÑOS
                   </text>
                 </svg>
               </div>
@@ -405,26 +383,26 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
           </div>
 
           <div className="flex items-center gap-4 mt-2">
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-slate-500 dark:text-neutral-400">
               *Renderizado 3D en tiempo real con dorsal oficial estampado
             </span>
           </div>
         </div>
 
         {/* Customization Controls Panel */}
-        <div className="lg:col-span-5 flex flex-col gap-5 bg-neutral-900/60 border border-neutral-800 p-6 rounded-xl">
+        <div className="lg:col-span-5 flex flex-col gap-5 bg-slate-50 dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 p-6 rounded-xl">
           <div>
-            <h3 className="text-xl font-bold font-display text-white tracking-wide">
+            <h3 className="text-xl font-bold font-display text-slate-900 dark:text-white tracking-wide">
               PERSONALIZA TU CAMISETA
             </h3>
-            <p className="text-xs text-neutral-400 mt-1">
+            <p className="text-xs text-slate-600 dark:text-neutral-400 mt-1">
               Estampa tu nombre y número con la tipografía oficial del Primer Plantel MC.
             </p>
           </div>
 
           {/* Theme Selector */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-300 block mb-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block mb-2">
               1. Versión de Equipación
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -435,8 +413,8 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                 }}
                 className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all text-left flex flex-col gap-1 cursor-pointer ${
                   kitTheme === 'home'
-                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-white'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-[#E6002B] dark:text-white'
+                    : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span className="w-3 h-3 rounded-full bg-[#E6002B]" />
@@ -450,11 +428,11 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                 }}
                 className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all text-left flex flex-col gap-1 cursor-pointer ${
                   kitTheme === 'away'
-                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-white'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-[#E6002B] dark:text-white'
+                    : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span className="w-3 h-3 rounded-full bg-neutral-200" />
+                <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-400" />
                 <span className="truncate">Suplente Blanca</span>
               </button>
 
@@ -465,11 +443,11 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                 }}
                 className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-all text-left flex flex-col gap-1 cursor-pointer ${
                   kitTheme === 'blackout'
-                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-white'
-                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                    ? 'border-[#E6002B] bg-[#E6002B]/10 text-[#E6002B] dark:text-white'
+                    : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span className="w-3 h-3 rounded-full bg-neutral-950 border border-neutral-700" />
+                <span className="w-3 h-3 rounded-full bg-neutral-950 border border-neutral-600" />
                 <span className="truncate">Cyber Blackout</span>
               </button>
             </div>
@@ -478,7 +456,7 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
           {/* Name & Number Input */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-300 block mb-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block mb-1.5">
                 2. Nombre o Apodo
               </label>
               <input
@@ -490,12 +468,12 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                   if (!isBackView) setIsBackView(true);
                 }}
                 placeholder="EJ: CAREAGA"
-                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white font-display tracking-widest uppercase focus:outline-none focus:border-[#E6002B]"
+                className="w-full bg-white dark:bg-neutral-950 border border-slate-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white font-display tracking-widest uppercase focus:outline-none focus:border-[#E6002B]"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-300 block mb-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block mb-1.5">
                 3. Dorsal (1-99)
               </label>
               <input
@@ -512,14 +490,14 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                   }
                   if (!isBackView) setIsBackView(true);
                 }}
-                className="w-full bg-neutral-950 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white font-mono-numbers text-center focus:outline-none focus:border-[#E6002B]"
+                className="w-full bg-white dark:bg-neutral-950 border border-slate-300 dark:border-neutral-700 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white font-mono-numbers text-center focus:outline-none focus:border-[#E6002B]"
               />
             </div>
           </div>
 
           {/* Size Selector */}
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-300 block mb-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-neutral-300 block mb-1.5">
               4. Seleccionar Talla
             </label>
             <div className="flex flex-wrap gap-2">
@@ -533,7 +511,7 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
                   className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-all cursor-pointer ${
                     selectedSize === size
                       ? 'border-[#E6002B] bg-[#E6002B] text-white shadow-sm'
-                      : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white hover:border-neutral-700'
+                      : 'border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-neutral-700'
                   }`}
                 >
                   {size}
@@ -543,25 +521,27 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
           </div>
 
           {/* Sleeve Badge Toggle */}
-          <div className="flex items-center justify-between p-3 bg-neutral-950 rounded-lg border border-neutral-800">
+          <div className="flex items-center justify-between p-3 bg-white dark:bg-neutral-950 rounded-lg border border-slate-200 dark:border-neutral-800">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#E6002B]" />
               <div className="text-xs">
-                <span className="font-semibold text-white block">Parche Oficial Liga Élite</span>
-                <span className="text-neutral-500">Termosellado en manga derecha</span>
+                <span className="font-semibold text-slate-900 dark:text-white block">Parche Oficial Liga Élite</span>
+                <span className="text-slate-500 dark:text-neutral-500">Termosellado en manga derecha</span>
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Activar o desactivar parche oficial de liga"
               onClick={() => {
                 playUiClick();
                 setHasSleeveBadge(!hasSleeveBadge);
               }}
               className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${
-                hasSleeveBadge ? 'bg-[#E6002B]' : 'bg-neutral-800'
+                hasSleeveBadge ? 'bg-[#E6002B]' : 'bg-slate-300 dark:bg-neutral-800'
               }`}
             >
               <span
-                className={`block w-4 h-4 bg-white rounded-full transition-transform absolute top-0.5 left-0.5 ${
+                className={`block w-4 h-4 bg-white rounded-full transition-transform absolute top-0.5 left-0.5 shadow-sm ${
                   hasSleeveBadge ? 'translate-x-4' : 'translate-x-0'
                 }`}
               />
@@ -569,15 +549,15 @@ export const JerseyCustomizer3D: React.FC<JerseyCustomizer3DProps> = ({ product,
           </div>
 
           {/* Price & Add to Cart Action */}
-          <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
+          <div className="pt-2 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-between">
             <div>
-              <span className="text-xs text-neutral-400 block">Precio Total Personalizado</span>
+              <span className="text-xs text-slate-500 dark:text-neutral-400 block">Precio Total Personalizado</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-mono-numbers text-white">
+                <span className="text-2xl font-bold font-mono-numbers text-slate-900 dark:text-white">
                   Bs. {product.price}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-xs line-through text-neutral-500 font-mono-numbers">
+                  <span className="text-xs line-through text-slate-400 dark:text-neutral-500 font-mono-numbers">
                     Bs. {product.originalPrice}
                   </span>
                 )}

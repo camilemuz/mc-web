@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 import { ASSETS } from '../content';
 import { useSiteContent } from '../utils/ContentContext';
 import { playUiClick, playGoalCheer, playWhoosh } from '../utils/soundEffects';
-import { Shield, Sparkles, ChevronLeft, ChevronRight, Zap, Trophy, Volume2, VolumeX, ArrowUpRight } from 'lucide-react';
+import { Shield, ChevronLeft, ChevronRight, Zap, Trophy, Volume2, VolumeX } from 'lucide-react';
 
 interface HeroFigmaStageProps {
   onOpenStore?: () => void;
@@ -89,7 +89,7 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
   const { content } = useSiteContent();
   const HERO = content.hero;
   const [mounted, setMounted] = useState(false);
-  
+
   // Interactive Mode Selector: 'players3d' | 'shield3d' | 'film'
   const [showcaseMode, setShowcaseMode] = useState<'players3d' | 'shield3d' | 'film'>('players3d');
   const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
@@ -184,8 +184,13 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
     el?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const officialSlogan = (content.clubInfo?.slogan || 'Cumpliendo Sueños').toUpperCase();
+  const sloganParts = officialSlogan.split(' ');
+  const sloganLine1 = sloganParts[0] || 'CUMPLIENDO';
+  const sloganLine2 = sloganParts.slice(1).join(' ') || 'SUEÑOS';
+
   if (!mounted) {
-    return <section className="min-h-screen bg-[#060608] flex items-center justify-center" />;
+    return <section className="min-h-screen bg-[#F4F6F8] dark:bg-[#08080A] flex items-center justify-center" />;
   }
 
   return (
@@ -193,71 +198,68 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
       ref={heroRef}
       id="home"
       aria-label="Portada Principal y Presentación Oficial Club MC"
-      className="relative min-h-screen w-full flex flex-col justify-center pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-24 overflow-hidden bg-[#060608] select-none"
+      className="relative min-h-[calc(100vh-0.5rem)] w-full flex flex-col justify-center pt-20 sm:pt-24 lg:pt-22 pb-8 sm:pb-12 overflow-hidden bg-gradient-to-b from-white via-[#F6F8FB] to-[#EEF2F6] dark:bg-gradient-to-br dark:from-[#1B0309] dark:via-[#0A0507] dark:to-[#050507] select-none transition-colors duration-300"
     >
-      {/* Background Watermark & Atmospheric Glows */}
+      {/* Background Texture & Stadium Atmospheric Lighting */}
       <motion.div style={{ y: bgY }} className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Ambient Red Glow Beams */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] lg:w-[950px] h-[450px] lg:h-[650px] bg-[#E6002B]/18 rounded-full blur-[150px]" />
-        <div className="absolute top-1/4 right-10 w-[450px] h-[450px] bg-red-950/25 rounded-full blur-[130px]" />
-        <div className="absolute bottom-10 left-10 w-[350px] h-[350px] bg-[#E6002B]/10 rounded-full blur-[110px]" />
+        {/* Dramatic Crimson Stadium Glow Beams in Dark Mode */}
+        <div className="hidden dark:block absolute -top-24 left-1/2 -translate-x-1/3 w-[950px] lg:w-[1200px] h-[650px] lg:h-[780px] bg-[#E6002B]/22 rounded-full blur-[160px]" />
+        <div className="hidden dark:block absolute top-1/4 right-0 w-[560px] h-[560px] bg-[#E6002B]/28 rounded-full blur-[140px]" />
+        <div className="hidden dark:block absolute bottom-0 left-0 w-[420px] h-[420px] bg-red-950/30 rounded-full blur-[120px]" />
 
-        {/* Cyber Carbon Grid Texture */}
-        <div className="absolute inset-0 carbon-grid opacity-25" />
+        {/* Clean Crisp Light Mode Ambient Depth (zero pink haze) */}
+        <div className="dark:hidden absolute -top-24 right-0 w-[680px] h-[680px] bg-gradient-to-bl from-slate-200/75 via-slate-100/35 to-transparent rounded-full blur-3xl" />
 
-        {/* Giant Athletic Typography Watermark: Slogan & Brand - Stacked & Scaled to never clip letters */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.04]">
-          <span className="font-extrabold uppercase font-display italic tracking-widest text-[11vw] sm:text-[9vw] leading-[0.8] text-white">
-            ALIMENTANDO
-          </span>
-          <span className="font-extrabold uppercase font-display italic tracking-widest text-[11vw] sm:text-[9vw] leading-[0.8] text-[#E6002B]">
-            SUEÑOS
-          </span>
+        {/* Subtle Carbon Grid Texture */}
+        <div className="absolute inset-0 carbon-grid opacity-25 dark:opacity-20" />
+
+        {/* Giant Editorial Ghost Slogan Watermark */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden px-6">
+          <div className="text-center font-display font-black italic uppercase tracking-tighter leading-[0.82] text-[18vw] sm:text-[13vw] lg:text-[10.5vw] text-slate-900/[0.035] dark:text-white/[0.045] translate-y-6">
+            <div>{sloganLine1}</div>
+            <div>{sloganLine2}</div>
+          </div>
         </div>
       </motion.div>
 
       {/* Main Content Grid: 12 Columns */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-        
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
+
         {/* Left Column: Athletic Typography, Official Slogan, Lede & CTA */}
         <motion.div
           style={{ y: textY }}
-          className="lg:col-span-7 flex flex-col justify-center space-y-6 sm:space-y-7"
+          className="lg:col-span-6 xl:col-span-6 flex flex-col justify-center space-y-4 sm:space-y-5"
         >
-          {/* Top Athletic Kicker with Slogan - Clear clearance below navbar */}
+          {/* Top Athletic Kicker */}
           <motion.div
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-black/75 border border-white/20 text-xs font-mono text-neutral-200 w-fit backdrop-blur-md shadow-lg shadow-black/60 mb-1"
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white dark:bg-black/70 border border-slate-200 dark:border-white/15 text-[11px] sm:text-xs font-mono text-slate-700 dark:text-neutral-200 w-fit shadow-sm dark:shadow-lg dark:shadow-black/60 backdrop-blur-md"
           >
-            <span className="w-2.5 h-2.5 rounded-full bg-[#E6002B] animate-pulse" aria-hidden="true" />
-            <span className="text-[#FF2E50] font-bold tracking-wider uppercase font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#E6002B] animate-pulse shrink-0" aria-hidden="true" />
+            <span className="text-[#E6002B] dark:text-[#FF2E50] font-bold tracking-wider uppercase font-mono">
               MC Emprender
             </span>
-            <span className="text-neutral-500">·</span>
-            <span className="text-white font-extrabold tracking-wide">ALIMENTANDO SUEÑOS</span>
-            <span className="text-neutral-500 hidden sm:inline">·</span>
-            <span className="text-neutral-300 hidden sm:inline">Temporada 2026/27</span>
+            <span className="text-slate-300 dark:text-neutral-500">·</span>
+            <span className="text-slate-900 dark:text-white font-extrabold tracking-wide">{officialSlogan}</span>
+            <span className="text-slate-300 dark:text-neutral-500 hidden sm:inline">·</span>
+            <span className="text-slate-500 dark:text-neutral-300 hidden sm:inline">Temporada 2026/27</span>
           </motion.div>
 
           {/* Primary High-Impact Athletic Headline */}
           <div className="space-y-0 leading-none">
-            <h1 className="font-extrabold uppercase font-display italic text-5xl sm:text-7xl md:text-8xl xl:text-9xl flex flex-col leading-[0.88] tracking-tight">
+            <h1 className="font-extrabold uppercase font-display italic text-5xl sm:text-6xl md:text-7xl xl:text-[86px] 2xl:text-[104px] flex flex-col leading-[0.86] tracking-tight">
               {HERO.headline.map((word, idx) => {
                 const lower = word.toLowerCase();
-                const isHighlight =
-                  lower.includes('pasion') ||
-                  lower.includes('pasión') ||
-                  lower.includes('gloria') ||
-                  lower.includes('sueños') ||
-                  lower.includes('suenos');
 
-                let colorClass = 'text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]';
+                let colorClass = 'text-slate-950 dark:text-white dark:drop-shadow-[0_6px_26px_rgba(0,0,0,0.85)]';
                 if (lower.includes('pasion') || lower.includes('pasión') || idx === 1) {
-                  colorClass = 'text-transparent bg-clip-text bg-gradient-to-r from-[#FF2E50] via-[#E6002B] to-[#B3001E] drop-shadow-[0_0_40px_rgba(230,0,43,0.7)]';
+                  colorClass =
+                    'text-[#E6002B] dark:text-[#FF1A40] dark:drop-shadow-[0_0_32px_rgba(230,0,43,0.55)]';
                 } else if (lower.includes('gloria') || lower.includes('sueños') || lower.includes('suenos') || idx === 2) {
-                  colorClass = 'text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-300 drop-shadow-[0_4px_24px_rgba(255,255,255,0.4)]';
+                  colorClass =
+                    'text-slate-800 dark:text-white dark:drop-shadow-[0_6px_24px_rgba(0,0,0,0.8)]';
                 }
 
                 return (
@@ -284,12 +286,12 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.45 }}
-            className="text-base sm:text-lg lg:text-xl text-neutral-200 font-sans leading-relaxed max-w-xl font-normal"
+            className="text-sm sm:text-base lg:text-[17px] text-slate-600 dark:text-neutral-200 font-sans leading-relaxed max-w-lg font-normal"
           >
             {HERO.lede}
           </motion.p>
 
-          {/* CTA Actions & Club Slogan Badge */}
+          {/* CTA Actions & Club Slogan Stamp */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,7 +302,7 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
               href="#squads"
               onClick={playUiClick}
               aria-label="Conocer categorías y unirse al Club MC"
-              className="px-7 py-3.5 bg-[#E6002B] hover:bg-[#FF1A40] text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all shadow-[0_0_35px_rgba(230,0,43,0.5)] hover:shadow-[0_0_45px_rgba(230,0,43,0.7)] flex items-center gap-2.5 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="px-7 py-3.5 bg-[#E6002B] hover:bg-[#C80025] text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all shadow-lg shadow-[#E6002B]/30 hover:shadow-xl hover:shadow-[#E6002B]/40 flex items-center gap-2.5 cursor-pointer active:scale-95 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6002B] focus-visible:ring-offset-2"
             >
               <span>{HERO.cta}</span>
               <svg
@@ -321,18 +323,18 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   onOpenStore();
                 }}
                 aria-label="Ir a la tienda oficial 3D del Club MC"
-                className="px-6 py-3.5 bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+                className="px-6 py-3.5 bg-white hover:bg-slate-100 dark:bg-white/[0.08] dark:hover:bg-white/[0.15] border border-slate-300 dark:border-white/20 text-slate-900 dark:text-white font-mono uppercase tracking-wider font-bold text-xs sm:text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-sm dark:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E6002B]"
               >
                 <span>Tienda Oficial</span>
               </button>
             )}
 
-            <div className="border-l border-white/25 pl-4 py-1 flex flex-col justify-center">
-              <span className="text-white font-extrabold tracking-wide font-display text-sm leading-tight flex items-center gap-2">
+            <div className="border-l-2 border-[#E6002B]/70 dark:border-white/25 pl-4 py-1 flex flex-col justify-center">
+              <span className="text-slate-900 dark:text-white font-extrabold tracking-wide font-display text-sm leading-tight flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#E6002B] animate-pulse" />
-                <span>ALIIMENTANDO SUEÑOS</span>
+                <span>{officialSlogan}</span>
               </span>
-              <span className="text-[11px] text-neutral-300 font-mono tracking-wider uppercase mt-0.5">
+              <span className="text-[11px] text-slate-500 dark:text-neutral-300 font-mono tracking-wider uppercase mt-0.5">
                 Formación & Primer Plantel
               </span>
             </div>
@@ -343,48 +345,48 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.65 }}
-            className="flex flex-wrap items-center gap-4 pt-3 border-t border-white/10"
+            className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-200 dark:border-white/10"
           >
             {/* Learners Card */}
-            <div className="glass px-4 py-2.5 rounded-2xl border border-white/15 bg-black/60 backdrop-blur-md flex items-center gap-3 shadow-lg shadow-black/50">
+            <div className="px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-black/60 backdrop-blur-md flex items-center gap-3 shadow-sm dark:shadow-lg dark:shadow-black/50">
               <div className="flex -space-x-2">
                 {ASSETS.img.avatars.slice(0, 3).map((av, idx) => (
                   <img
                     key={idx}
                     src={av}
                     alt={`Jugador formado en Escuela MC ${idx + 1}`}
-                    width={28}
-                    height={28}
-                    className="w-7 h-7 rounded-full border-2 border-black object-cover"
+                    width={26}
+                    height={26}
+                    className="w-6.5 h-6.5 rounded-full border-2 border-white dark:border-black object-cover"
                   />
                 ))}
               </div>
               <div>
-                <span className="font-extrabold font-display text-white text-base block leading-none">
+                <span className="font-extrabold font-display text-slate-950 dark:text-white text-sm sm:text-base block leading-none">
                   {HERO.learners.value}
                 </span>
-                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                <span className="text-slate-500 dark:text-neutral-300 font-mono text-[10px] uppercase font-semibold">
                   {HERO.learners.label}
                 </span>
               </div>
             </div>
 
             {/* Regional Titles & Matches Card */}
-            <div className="glass px-4 py-2.5 rounded-2xl border border-white/15 bg-black/60 backdrop-blur-md flex items-center gap-4 shadow-lg shadow-black/50">
+            <div className="px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-white/15 bg-white dark:bg-black/60 backdrop-blur-md flex items-center gap-3.5 shadow-sm dark:shadow-lg dark:shadow-black/50">
               <div>
-                <span className="font-extrabold font-display text-white text-base block leading-none">
+                <span className="font-extrabold font-display text-slate-950 dark:text-white text-sm sm:text-base block leading-none">
                   {HERO.sessions.value}
                 </span>
-                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                <span className="text-slate-500 dark:text-neutral-300 font-mono text-[10px] uppercase font-semibold">
                   {HERO.sessions.label}
                 </span>
               </div>
-              <div className="h-6 w-[1px] bg-white/20" aria-hidden="true" />
+              <div className="h-5 w-[1px] bg-slate-200 dark:bg-white/20" aria-hidden="true" />
               <div>
-                <span className="font-extrabold font-display text-[#FF2E50] text-base block leading-none">
+                <span className="font-extrabold font-display text-[#E6002B] dark:text-[#FF2E50] text-sm sm:text-base block leading-none">
                   {HERO.dataPoints.value}
                 </span>
-                <span className="text-neutral-300 font-mono text-[11px] uppercase font-semibold">
+                <span className="text-slate-500 dark:text-neutral-300 font-mono text-[10px] uppercase font-semibold">
                   {HERO.dataPoints.label}
                 </span>
               </div>
@@ -392,45 +394,47 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
           </motion.div>
         </motion.div>
 
-        {/* Right Column: High-Impact 3D Showcase (Escudo 3D / Cracks en Aumento / Film Estadio) */}
+        {/* Right Column: Open Frameless Orbital 3D Stadium Stage (Cracks 3D / Escudo 3D / Film Estadio) */}
         <motion.div
           style={{ y: mediaY }}
-          className="lg:col-span-5 flex flex-col items-center justify-center relative mt-6 lg:mt-0"
+          className="lg:col-span-6 xl:col-span-6 flex flex-col items-center justify-center relative mt-4 lg:mt-0"
         >
-          {/* Main 3D Container Stage Frame */}
-          <div className="relative w-[320px] h-[360px] sm:w-[420px] sm:h-[450px] md:w-[460px] md:h-[480px] lg:w-[470px] lg:h-[500px] xl:w-[520px] xl:h-[540px] flex items-center justify-center">
-            
-            {/* EFFECT 1: Layered Neon Red Flare & Ambient Aura */}
-            <div className="absolute -inset-10 sm:-inset-14 rounded-full bg-gradient-to-tr from-[#E6002B]/45 via-[#E6002B]/20 to-transparent blur-[75px] pointer-events-none animate-pulse" />
-            <div className="absolute -inset-16 rounded-full bg-[#E6002B]/15 blur-[100px] pointer-events-none" />
+          {/* Floating Top Status Pill */}
+          <div className="relative z-30 mb-2 pointer-events-none">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-black/80 border border-slate-200 dark:border-white/15 backdrop-blur-xl text-[11px] font-mono shadow-md dark:shadow-2xl">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+              <span className="font-extrabold tracking-wider uppercase text-slate-950 dark:text-white">MC EMPRENDER</span>
+              <span className="text-[#E6002B] font-bold">·</span>
+              <span className="font-extrabold tracking-wide text-slate-800 dark:text-white">{officialSlogan}</span>
+              <span className="text-slate-300 dark:text-neutral-500 hidden sm:inline">·</span>
+              <span className="text-slate-500 dark:text-neutral-300 hidden sm:inline">{activePlayer.category || 'Primer Plantel'}</span>
+            </div>
+          </div>
 
-            {/* EFFECT 2: Live Conic Sweep Light Radar */}
-            <div
-              className="absolute -inset-6 sm:-inset-8 rounded-full pointer-events-none animate-[spin_10s_linear_infinite] opacity-60"
-              style={{
-                background:
-                  'conic-gradient(from 0deg, transparent 0deg, rgba(230,0,43,0) 50deg, rgba(230,0,43,0.7) 110deg, transparent 140deg)',
-                filter: 'blur(3px)',
-              }}
-            />
+          {/* Open Frameless Orbital Container */}
+          <div className="relative w-full max-w-[490px] h-[390px] sm:h-[430px] lg:h-[450px] 2xl:h-[520px] flex items-center justify-center">
+            {/* Ambient Crimson Halo Orb Behind Player */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[260px] h-[260px] sm:w-[340px] sm:h-[340px] rounded-full bg-gradient-to-tr from-[#E6002B]/20 via-[#E6002B]/10 to-transparent dark:from-[#E6002B]/45 dark:via-[#E6002B]/20 dark:to-transparent blur-3xl pointer-events-none" />
 
-            {/* EFFECT 3: Outer Rotating Dashed Neon Ring with Cardinal Diamond Markers */}
-            <div className="absolute -inset-6 sm:-inset-8 rounded-full border-2 border-dashed border-[#E6002B]/60 animate-[spin_35s_linear_infinite] pointer-events-none">
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
-              <span className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
-              <span className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+            {/* Outer Rotating Dashed Crimson Orbital Ring with Glowing Diamond Nodes */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[310px] h-[310px] sm:w-[375px] sm:h-[375px] lg:w-[405px] lg:h-[405px] 2xl:w-[465px] 2xl:h-[465px] rounded-full border border-dashed border-[#E6002B]/45 dark:border-[#E6002B]/55 pointer-events-none animate-[spin_45s_linear_infinite]">
+              <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+              <span className="absolute top-1/4 -right-1 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
+              <span className="absolute bottom-1/4 -left-1 w-2.5 h-2.5 rotate-45 bg-[#E6002B] shadow-[0_0_12px_#E6002B]" />
             </div>
 
-            {/* EFFECT 4: Inner Counter-Rotating Reticle */}
-            <div className="absolute -inset-3 sm:-inset-4 rounded-full border border-white/20 animate-[spin_55s_linear_infinite_reverse] pointer-events-none" />
+            {/* Inner Subtle Ring */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] sm:w-[305px] sm:h-[305px] lg:w-[330px] lg:h-[330px] 2xl:w-[380px] 2xl:h-[380px] rounded-full border border-[#E6002B]/15 dark:border-[#E6002B]/25 bg-gradient-to-b from-slate-900/[0.04] to-transparent dark:from-[#E6002B]/[0.12] dark:via-[#1C040A]/40 dark:to-transparent pointer-events-none" />
 
             {/* ------------------------------------------------------------- */}
-            {/* VIEW MODE 1: CRACKS 3D DEL PRIMER PLANTEL (SILUETA RECORTADA + ZOOM 3D) */}
+            {/* VIEW MODE 1: CRACKS 3D DEL PRIMER PLANTEL (FRAMELESS ORBITAL) */}
             {/* ------------------------------------------------------------- */}
             {showcaseMode === 'players3d' && (
               <div
-                className="relative w-full h-[400px] sm:h-[480px] md:h-[520px] flex items-center justify-center perspective-1000 cursor-pointer overflow-hidden select-none"
+                className="relative w-full h-full flex items-center justify-center perspective-1000 cursor-pointer select-none"
                 onMouseMove={handleCardMouseMove}
                 onMouseEnter={() => setIsCardHovered(true)}
                 onMouseLeave={() => {
@@ -440,32 +444,26 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                 onClick={scrollToRoster}
                 title="Haz clic para ver la plantilla completa del Club MC"
               >
-                {/* Atmospheric Stadium Backdrop: Radial Glow + Red Neon Beam */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-[300px] sm:w-[420px] h-[300px] sm:h-[420px] rounded-full bg-radial from-[#E6002B]/40 via-[#E6002B]/10 to-transparent blur-3xl animate-pulse" />
-                  <div className="absolute w-[220px] sm:w-[320px] h-[380px] sm:h-[460px] rounded-full bg-gradient-to-t from-black via-black/40 to-transparent opacity-90" />
-                </div>
-
-                {/* Giant Athletic Number Watermark behind player */}
+                {/* Giant Athletic Number Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-                  <span className="text-[180px] sm:text-[260px] font-black font-display text-white/[0.04] leading-none tracking-tighter">
+                  <span className="text-[180px] sm:text-[220px] font-black font-display italic text-slate-900/[0.04] dark:text-white/[0.05] leading-none tracking-tighter">
                     #{activePlayer.number}
                   </span>
                 </div>
 
-                {/* Main Player Cutout Silhouette with 3D Mouse Tilt + Continuous Slow Zoom ("agrandando de a poco") */}
+                {/* Main Player Figure Floating Inside Orbital Ring */}
                 <motion.div
                   key={activePlayer.id}
-                  initial={{ opacity: 0, scale: 0.94, filter: 'blur(8px)' }}
+                  initial={{ opacity: 0, scale: 0.92, filter: 'blur(6px)' }}
                   animate={{
                     opacity: 1,
                     filter: 'blur(0px)',
-                    scale: isCardHovered ? 1.15 : [1, 1.10, 1.02],
-                    y: [0, -8, 0],
+                    scale: isCardHovered ? 1.05 : [1, 1.025, 1],
+                    y: [0, -7, 0],
                   }}
                   transition={{
                     scale: {
-                      duration: isCardHovered ? 0.4 : 8,
+                      duration: isCardHovered ? 0.35 : 8,
                       repeat: isCardHovered ? 0 : Infinity,
                       ease: 'easeInOut',
                     },
@@ -474,60 +472,48 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                       repeat: Infinity,
                       ease: 'easeInOut',
                     },
-                    opacity: { duration: 0.6 },
-                    filter: { duration: 0.6 },
+                    opacity: { duration: 0.45 },
+                    filter: { duration: 0.45 },
                   }}
                   style={{
                     transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
                     transformStyle: 'preserve-3d',
                   }}
-                  className="relative z-10 h-full flex flex-col items-center justify-center transition-transform duration-200 ease-out"
+                  className="relative z-10 w-[280px] sm:w-[340px] lg:w-[365px] 2xl:w-[410px] h-[340px] sm:h-[385px] lg:h-[405px] 2xl:h-[465px] flex items-end justify-center transition-transform duration-200 ease-out"
                 >
-                  {/* Cutout Player Figure with Seamless Bottom Gradient Mask */}
-                  <div className="relative h-[340px] sm:h-[420px] md:h-[470px] flex items-center justify-center">
-                    <img
-                      src={activePlayer.image}
-                      alt={`Jugador estrella del primer plantel: ${activePlayer.name}`}
-                      className="h-full w-auto max-w-[280px] sm:max-w-[360px] md:max-w-[400px] object-cover object-top filter contrast-110 drop-shadow-[0_25px_50px_rgba(0,0,0,0.95)]"
-                      style={{
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 68%, transparent 98%)',
-                        maskImage: 'linear-gradient(to bottom, black 68%, transparent 98%)',
-                      }}
-                    />
-                    {/* Subtle red rim light reflection */}
-                    <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                  </div>
+                  <img
+                    src={activePlayer.image}
+                    alt={`Jugador destacado del primer plantel: ${activePlayer.name}`}
+                    className="w-full h-full object-contain object-bottom filter drop-shadow-[0_22px_35px_rgba(0,0,0,0.45)] dark:drop-shadow-[0_24px_45px_rgba(0,0,0,0.9)] [mask-image:linear-gradient(to_bottom,black_76%,transparent_100%)] rounded-b-full"
+                  />
                 </motion.div>
 
-                {/* Floating Minimalist Player Identity Plaque at the bottom */}
-                <div className="absolute bottom-3 inset-x-2 sm:inset-x-4 flex flex-col items-center text-center z-20 pointer-events-auto">
-                  {/* Dorsal & Position Tag */}
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-black/85 border border-white/20 backdrop-blur-md shadow-xl text-xs font-mono mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#E6002B] animate-pulse" />
-                    <span className="text-[#FF2E50] font-black tracking-wider">#{activePlayer.number}</span>
-                    <span className="text-neutral-500">·</span>
-                    <span className="text-white font-bold uppercase">{activePlayer.position}</span>
-                    <span className="text-neutral-500">·</span>
-                    <span className="text-neutral-300 uppercase font-mono text-[10px]">{activePlayer.category}</span>
+                {/* Bottom Player Identity Plaque */}
+                <div className="absolute bottom-1 inset-x-4 flex flex-col items-center text-center z-20 pointer-events-auto">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/95 dark:bg-black/85 border border-slate-200 dark:border-white/15 backdrop-blur-md text-[11px] font-mono mb-1.5 shadow-md dark:shadow-xl">
+                    <span className="w-2 h-2 rounded-full bg-[#E6002B]" />
+                    <span className="text-[#E6002B] dark:text-[#FF3355] font-black tracking-wider">#{activePlayer.number}</span>
+                    <span className="text-slate-300 dark:text-neutral-600">·</span>
+                    <span className="text-slate-900 dark:text-white font-bold uppercase">{activePlayer.position}</span>
+                    <span className="text-slate-300 dark:text-neutral-600">·</span>
+                    <span className="text-slate-500 dark:text-neutral-300 uppercase text-[10px]">{activePlayer.category}</span>
                   </div>
 
-                  {/* Big Athletic Name */}
-                  <h3 className="font-extrabold uppercase font-display italic text-3xl sm:text-4xl md:text-5xl text-white tracking-wide leading-none drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]">
+                  <h3 className="font-extrabold uppercase font-display italic text-3xl sm:text-4xl lg:text-5xl text-slate-950 dark:text-white tracking-wide leading-none drop-shadow-[0_2px_10px_rgba(255,255,255,0.65)] dark:drop-shadow-[0_4px_18px_rgba(0,0,0,0.95)]">
                     {activePlayer.name}
                   </h3>
 
-                  {/* Nickname & Role */}
-                  <p className="text-xs sm:text-sm font-mono text-neutral-300 uppercase tracking-widest mt-1 flex items-center gap-2">
+                  <p className="text-xs font-mono text-slate-600 dark:text-neutral-300 uppercase tracking-widest mt-1 flex items-center gap-2">
                     <span className="text-[#E6002B]">★</span>
                     <span>{activePlayer.nickname}</span>
-                    <span className="text-neutral-600">|</span>
-                    <span className="text-white font-semibold">{activePlayer.role}</span>
+                    <span className="text-slate-300 dark:text-neutral-600">|</span>
+                    <span className="text-slate-900 dark:text-white font-semibold">{activePlayer.role}</span>
                     <span className="text-[#E6002B]">★</span>
                   </p>
 
                   {/* Player Carousel Pagination Indicators */}
                   <div className="flex items-center gap-2 mt-3">
-                    {STAR_PLAYERS.map((p, idx) => (
+                    {heroPlayers.map((p, idx) => (
                       <button
                         key={p.id}
                         type="button"
@@ -539,9 +525,9 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                         className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                           idx === currentPlayerIdx
                             ? 'w-8 bg-[#E6002B] shadow-[0_0_12px_#E6002B]'
-                            : 'w-2 bg-white/30 hover:bg-white/60'
+                            : 'w-2 bg-slate-300 dark:bg-white/35 hover:bg-slate-500 dark:hover:bg-white/80'
                         }`}
-                        aria-label={`Ver crack del primer plantel: ${p.name}`}
+                        aria-label={`Ver jugador destacado: ${p.name}`}
                         title={p.name}
                       />
                     ))}
@@ -553,7 +539,7 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   type="button"
                   onClick={handlePrevPlayer}
                   aria-label="Ver jugador anterior del primer plantel"
-                  className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 hover:bg-[#E6002B] border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-xl hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+                  className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 dark:bg-black/75 hover:bg-[#E6002B] dark:hover:bg-[#E6002B] border border-slate-200 dark:border-white/20 text-slate-900 dark:text-white hover:text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-lg hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
                 >
                   <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                 </button>
@@ -561,7 +547,7 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   type="button"
                   onClick={handleNextPlayer}
                   aria-label="Ver siguiente jugador del primer plantel"
-                  className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/80 hover:bg-[#E6002B] border border-white/20 text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-xl hover:scale-110 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
+                  className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/95 dark:bg-black/75 hover:bg-[#E6002B] dark:hover:bg-[#E6002B] border border-slate-200 dark:border-white/20 text-slate-900 dark:text-white hover:text-white flex items-center justify-center transition-all cursor-pointer z-30 shadow-lg hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-[#E6002B]"
                 >
                   <ChevronRight className="w-5 h-5" aria-hidden="true" />
                 </button>
@@ -569,11 +555,11 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
             )}
 
             {/* ------------------------------------------------------------- */}
-            {/* VIEW MODE 2: ESCUDO 3D POTENCIADO (ESCUDO OFICIAL HOLOGRÁFICO) */}
+            {/* VIEW MODE 2: ESCUDO 3D OFICIAL                                */}
             {/* ------------------------------------------------------------- */}
             {showcaseMode === 'shield3d' && (
               <div
-                className="relative w-full h-full flex flex-col items-center justify-center perspective-1000 cursor-pointer"
+                className="relative w-full h-full flex flex-col items-center justify-center perspective-1000 cursor-pointer px-6"
                 onMouseMove={handleShieldMouseMove}
                 onMouseEnter={() => setIsShieldHovered(true)}
                 onMouseLeave={() => {
@@ -583,31 +569,27 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                 onClick={handleShieldClick}
                 title="Haz clic para celebrar el gol y activar la energía del club"
               >
-                {/* 3D Floating Shield Unit */}
                 <motion.div
-                  animate={{ y: [-8, 8, -8] }}
+                  animate={{ y: [-6, 6, -6] }}
                   transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                  className={`relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center transition-transform duration-300 ${
-                    shieldBurst ? 'scale-125' : isShieldHovered ? 'scale-110' : 'scale-100'
+                  className={`relative w-60 h-60 sm:w-72 sm:h-72 flex items-center justify-center transition-transform duration-300 ${
+                    shieldBurst ? 'scale-120' : isShieldHovered ? 'scale-108' : 'scale-100'
                   }`}
                   style={{
                     transform: `rotateX(${shieldTilt.rx}deg) rotateY(${shieldTilt.ry}deg)`,
                     transformStyle: 'preserve-3d',
                   }}
                 >
-                  {/* Energy burst on click */}
                   {shieldBurst && (
                     <div className="absolute inset-0 rounded-full bg-[#E6002B] blur-2xl animate-ping opacity-80 pointer-events-none" />
                   )}
 
-                  {/* Concentric Platinum and Crimson Halo Glow */}
-                  <div className="absolute -inset-8 rounded-full bg-gradient-to-tr from-[#E6002B] via-red-900/30 to-transparent blur-3xl opacity-70 pointer-events-none" />
-                  
-                  {/* High-Definition Official Shield */}
-                  <div className="relative w-48 h-48 sm:w-60 sm:h-60 z-20 flex items-center justify-center filter drop-shadow-[0_0_25px_rgba(230,0,43,0.8)] hover:drop-shadow-[0_0_40px_rgba(230,0,43,1)] transition-all">
+                  <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-[#E6002B]/35 via-red-900/15 to-transparent blur-3xl pointer-events-none" />
+
+                  <div className="relative w-52 h-52 sm:w-60 sm:h-60 z-20 flex items-center justify-center filter drop-shadow-[0_12px_28px_rgba(230,0,43,0.45)] dark:drop-shadow-[0_0_32px_rgba(230,0,43,0.75)] transition-all">
                     <img
                       src="/logo-mc-shield.png"
-                      alt="Escudo Oficial Club MC Emprender Martín Careaga - Aimentando Sueños"
+                      alt="Escudo Oficial Club MC Martín Careaga"
                       width={240}
                       height={240}
                       className="w-full h-full object-contain"
@@ -615,27 +597,25 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   </div>
                 </motion.div>
 
-                {/* Slogan Pedestal Plate - Clean, fully visible, zero collisions */}
-                <div className="mt-4 px-6 py-2.5 rounded-full bg-black/90 border-2 border-white/20 backdrop-blur-xl shadow-[0_0_35px_rgba(230,0,43,0.35)] text-center z-20">
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 font-bold block">
-                    CLUB MC EMPRENDER
+                {/* Slogan Pedestal Plate */}
+                <div className="mt-5 px-6 py-2.5 rounded-full bg-white/95 dark:bg-black/85 border border-slate-200 dark:border-white/20 backdrop-blur-xl shadow-lg text-center z-20">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 dark:text-neutral-400 font-bold block">
+                    CLUB MARTÍN CAREAGA
                   </span>
-                  <span className="text-sm sm:text-base font-extrabold font-display text-white tracking-widest flex items-center gap-2.5 justify-center">
-                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shadow-[0_0_8px_#E6002B] shrink-0" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-neutral-300">
-                      ALIMENTANDO SUEÑOS
-                    </span>
-                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shadow-[0_0_8px_#E6002B] shrink-0" />
+                  <span className="text-sm sm:text-base font-extrabold font-display text-slate-950 dark:text-white tracking-widest flex items-center gap-2.5 justify-center">
+                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shrink-0" />
+                    <span>{officialSlogan}</span>
+                    <span className="w-1.5 h-1.5 rotate-45 bg-[#E6002B] shrink-0" />
                   </span>
                 </div>
               </div>
             )}
 
             {/* ------------------------------------------------------------- */}
-            {/* VIEW MODE 3: FILM ESTADIO (VIDEO CINEMATOGRÁFICO)             */}
+            {/* VIEW MODE 3: FILM ESTADIO                                     */}
             {/* ------------------------------------------------------------- */}
             {showcaseMode === 'film' && (
-              <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/25 shadow-[0_0_60px_rgba(230,0,43,0.45)] ring-4 ring-[#E6002B]/35">
+              <div className="relative w-[320px] h-[320px] sm:w-[410px] sm:h-[410px] rounded-full overflow-hidden border-2 border-[#E6002B]/50 shadow-2xl shadow-black/60 z-10">
                 <video
                   ref={videoRef}
                   src={ASSETS.video.film}
@@ -646,44 +626,25 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
                   playsInline
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-radial from-transparent via-black/30 to-black/80 pointer-events-none" />
-                
-                {/* Audio Button for Film */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+
                 <button
                   type="button"
                   onClick={() => setIsMuted(!isMuted)}
                   aria-label={isMuted ? 'Activar sonido del estadio' : 'Silenciar sonido del estadio'}
-                  className="absolute bottom-5 right-5 p-2 rounded-full bg-black/80 border border-white/20 text-white z-30 cursor-pointer hover:bg-[#E6002B] transition-colors"
+                  className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/80 border border-white/25 text-white text-xs font-mono z-30 cursor-pointer hover:bg-[#E6002B] transition-colors flex items-center gap-2"
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                  <span>{isMuted ? 'Activar Audio' : 'Silenciar'}</span>
                 </button>
               </div>
             )}
-
-            {/* Broadcast Live Status Pill - Positioned safely at top-left of stage, avoiding all cards & pedestals */}
-            <div className="absolute -top-3.5 left-2 sm:-top-4 sm:left-2 glass rounded-full border border-white/20 bg-black/85 backdrop-blur-xl px-4 py-1.5 shadow-2xl flex items-center gap-2.5 z-30 pointer-events-auto">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00cc44] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00cc44]" />
-              </span>
-              <span className="text-xs font-extrabold font-display uppercase tracking-wider text-white">
-                MC EMPRENDER
-              </span>
-              <span className="text-[#E6002B] font-bold">·</span>
-              <span className="text-xs font-bold font-mono text-white">
-                ALIMENTANDO SUEÑOS
-              </span>
-              <span className="text-neutral-500 hidden sm:inline">·</span>
-              <span className="text-[11px] font-mono text-neutral-300 hidden sm:inline">
-                Primer Plantel
-              </span>
-            </div>
           </div>
 
           {/* 3D Mode Selector Dock */}
           <nav
             aria-label="Selector de visualización del Hero"
-            className="mt-8 sm:mt-10 flex items-center gap-2 sm:gap-3 glass rounded-full border border-white/20 px-3 sm:px-4 py-2 shadow-2xl bg-black/80 backdrop-blur-xl z-20"
+            className="mt-4 flex items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200 dark:border-white/20 px-2.5 sm:px-3 py-1.5 shadow-md dark:shadow-2xl bg-white dark:bg-black/80 backdrop-blur-xl z-20"
           >
             <button
               type="button"
@@ -693,12 +654,12 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
                 showcaseMode === 'players3d'
-                  ? 'bg-[#E6002B] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
-                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-[#E6002B] text-white shadow-sm shadow-[#E6002B]/40'
+                  : 'text-slate-700 dark:text-neutral-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
               }`}
             >
-              <Zap className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-              <span>01 Cracks 3D (Aumento)</span>
+              <Zap className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>01 Cracks 3D</span>
             </button>
 
             <button
@@ -709,11 +670,11 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
                 showcaseMode === 'shield3d'
-                  ? 'bg-gradient-to-r from-[#E6002B] to-[#99001D] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
-                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-[#E6002B] text-white shadow-sm shadow-[#E6002B]/40'
+                  : 'text-slate-700 dark:text-neutral-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
               }`}
             >
-              <Shield className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+              <Shield className="w-3.5 h-3.5" aria-hidden="true" />
               <span>02 Escudo 3D</span>
             </button>
 
@@ -725,11 +686,11 @@ export const HeroFigmaStage: React.FC<HeroFigmaStageProps> = ({ onOpenStore }) =
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all cursor-pointer font-bold flex items-center gap-1.5 ${
                 showcaseMode === 'film'
-                  ? 'bg-[#E6002B] text-white shadow-[0_0_18px_rgba(230,0,43,0.7)]'
-                  : 'text-neutral-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-[#E6002B] text-white shadow-sm shadow-[#E6002B]/40'
+                  : 'text-slate-700 dark:text-neutral-300 hover:text-slate-950 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
               }`}
             >
-              <Trophy className="w-3.5 h-3.5 text-white" aria-hidden="true" />
+              <Trophy className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">03 Film Estadio</span>
               <span className="sm:hidden">03 Film</span>
             </button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Match, Product, Player, NewsArticle, AcademyLead, MatchEvent, ClubEvent } from '../types';
 import { playUiClick, playGoalCheer } from '../utils/soundEffects';
 import { useSiteContent, SquadItem, MethodStep, MethodMetric, StaffMember, MembershipPlan, FaqItem, ClubInfo, HeroPlayer } from '../utils/ContentContext';
+import { useTheme } from '../utils/ThemeContext';
 import {
   X,
   Settings,
@@ -37,7 +38,10 @@ import {
   Image as ImageIcon,
   ArrowUp,
   ArrowDown,
-  ArrowLeft
+  ArrowLeft,
+  Compass,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 interface AdminCMSModalProps {
@@ -58,6 +62,7 @@ interface AdminCMSModalProps {
 
 type CMSTab =
   | 'hero'
+  | 'about'
   | 'squads'
   | 'match'
   | 'method'
@@ -90,6 +95,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   const {
     content,
     updateHero,
+    updateAboutUs,
     updateHeroPlayers,
     updateSquads,
     updateMethodSteps,
@@ -106,6 +112,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
     importContentJson
   } = useSiteContent();
 
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<CMSTab>('hero');
   const [searchTerm, setSearchTerm] = useState('');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
@@ -229,14 +236,12 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   const handleDeleteHeroPlayer = (id: string) => {
     playUiClick();
     if ((content.heroPlayers || []).length <= 1) {
-      alert('Debe haber al menos 1 jugador para la portada 3D del Hero.');
+      triggerSaveNotification('Debe haber al menos 1 jugador en la portada 3D');
       return;
     }
-    if (confirm('¿Eliminar a este jugador del carrusel 3D del Hero?')) {
-      const updated = (content.heroPlayers || []).filter((hp) => hp.id !== id);
-      updateHeroPlayers(updated);
-      triggerSaveNotification('Jugador 3D eliminado del Hero');
-    }
+    const updated = (content.heroPlayers || []).filter((hp) => hp.id !== id);
+    updateHeroPlayers(updated);
+    triggerSaveNotification('Jugador 3D eliminado del Hero');
   };
 
   // Player Image Upload Handler
@@ -293,11 +298,9 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
 
   const handleDeleteCalendarEvent = (id: string) => {
     playUiClick();
-    if (confirm('¿Eliminar este evento de la agenda?')) {
-      const updated = content.events.filter((e) => e.id !== id);
-      updateEvents(updated);
-      triggerSaveNotification('Evento eliminado de la agenda');
-    }
+    const updated = content.events.filter((e) => e.id !== id);
+    updateEvents(updated);
+    triggerSaveNotification('Evento eliminado de la agenda');
   };
 
   // Player Handlers
@@ -336,11 +339,9 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
 
   const handleDeletePlayer = (id: string) => {
     playUiClick();
-    if (confirm('¿Eliminar a este jugador de la plantilla?')) {
-      const updated = players.filter((p) => p.id !== id);
-      onUpdatePlayers(updated);
-      triggerSaveNotification('Jugador eliminado');
-    }
+    const updated = players.filter((p) => p.id !== id);
+    onUpdatePlayers(updated);
+    triggerSaveNotification('Jugador eliminado');
   };
 
   // News Handlers
@@ -368,11 +369,9 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
 
   const handleDeleteNews = (id: string) => {
     playUiClick();
-    if (confirm('¿Eliminar esta noticia?')) {
-      const updated = news.filter((n) => n.id !== id);
-      onUpdateNews(updated);
-      triggerSaveNotification('Noticia eliminada');
-    }
+    const updated = news.filter((n) => n.id !== id);
+    onUpdateNews(updated);
+    triggerSaveNotification('Noticia eliminada');
   };
 
   const scrollToSection = (id: string) => {
@@ -461,7 +460,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
       if (contentStr) {
         const success = importContentJson(contentStr);
         if (success) triggerSaveNotification('¡Copia de seguridad restaurada con éxito!');
-        else alert('Error: El archivo JSON no tiene un formato válido.');
+        else triggerSaveNotification('Error: El archivo JSON no tiene un formato válido');
       }
     };
     reader.readAsText(file);
@@ -469,6 +468,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
 
   const tabsConfig: { id: CMSTab; label: string; icon: any; category: string }[] = [
     { id: 'hero', label: 'Hero & Portada', icon: Sparkles, category: 'Diseño & Textos' },
+    { id: 'about', label: 'Quiénes Somos (Misión/Visión)', icon: Compass, category: 'Diseño & Textos' },
     { id: 'location', label: 'Sede & Horarios', icon: MapPin, category: 'Diseño & Textos' },
     { id: 'squads', label: 'Categorías & Plantel', icon: Trophy, category: 'Deportes' },
     { id: 'match', label: 'Match Center en Vivo', icon: Radio, category: 'Deportes' },
@@ -536,6 +536,28 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
               <span>{savedNotice}</span>
             </div>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              playUiClick();
+              toggleTheme();
+              triggerSaveNotification(theme === 'dark' ? 'Sitio web cambiado a Modo Claro' : 'Sitio web cambiado a Modo Oscuro');
+            }}
+            className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-500 text-neutral-200 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            title={theme === 'dark' ? 'Cambiar sitio web a Modo Claro' : 'Cambiar sitio web a Modo Oscuro'}
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">Web: Claro</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-3.5 h-3.5 text-sky-400" />
+                <span className="hidden md:inline">Web: Oscuro</span>
+              </>
+            )}
+          </button>
           {onLogout && (
             <button
               onClick={() => {
@@ -3140,15 +3162,142 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
                   </p>
                   <button
                     onClick={() => {
-                      if (confirm('¿Seguro que deseas restablecer todos los textos a los valores predeterminados?')) {
-                        resetAllContent();
-                        triggerSaveNotification('Valores de fábrica restaurados');
-                      }
+                      resetAllContent();
+                      triggerSaveNotification('Valores de fábrica restaurados');
                     }}
                     className="px-5 py-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-200 text-xs font-mono font-bold rounded-xl transition-all cursor-pointer"
                   >
                     Restablecer de Fábrica
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: QUIÉNES SOMOS (MISIÓN, VISIÓN & PILARES) */}
+            {activeTab === 'about' && (
+              <div className="space-y-6">
+                <div className="border-b border-neutral-800 pb-4">
+                  <h4 className="text-xl font-bold font-display text-white flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-[#E6002B]" />
+                    <span>Quiénes Somos · Misión, Visión y Pilares</span>
+                  </h4>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Edita la identidad institucional, la Misión, la Visión y los 4 pilares de formación integral visibles en la sección Quiénes Somos.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1.5">
+                      Subtítulo Superior (Kicker)
+                    </label>
+                    <input
+                      type="text"
+                      value={content.aboutUs.kicker}
+                      onChange={(e) => {
+                        updateAboutUs({ kicker: e.target.value });
+                        triggerSaveNotification('Identidad actualizada');
+                      }}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1.5">
+                      Titular Principal
+                    </label>
+                    <input
+                      type="text"
+                      value={content.aboutUs.title}
+                      onChange={(e) => {
+                        updateAboutUs({ title: e.target.value });
+                        triggerSaveNotification('Titular actualizado');
+                      }}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-mono uppercase text-neutral-400 block mb-1.5">
+                    Descripción Introductoria
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={content.aboutUs.subtitle}
+                    onChange={(e) => {
+                      updateAboutUs({ subtitle: e.target.value });
+                      triggerSaveNotification('Descripción actualizada');
+                    }}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#E6002B] resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="p-5 bg-neutral-900/60 border border-neutral-800 rounded-2xl space-y-3">
+                    <label className="text-xs font-mono uppercase text-[#E6002B] font-bold block">
+                      01 · Misión del Club
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={content.aboutUs.missionBody}
+                      onChange={(e) => {
+                        updateAboutUs({ missionBody: e.target.value });
+                        triggerSaveNotification('Misión actualizada');
+                      }}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#E6002B]"
+                    />
+                  </div>
+
+                  <div className="p-5 bg-neutral-900/60 border border-neutral-800 rounded-2xl space-y-3">
+                    <label className="text-xs font-mono uppercase text-[#E6002B] font-bold block">
+                      02 · Visión del Club
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={content.aboutUs.visionBody}
+                      onChange={(e) => {
+                        updateAboutUs({ visionBody: e.target.value });
+                        triggerSaveNotification('Visión actualizada');
+                      }}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white leading-relaxed focus:outline-none focus:border-[#E6002B]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-xs font-mono uppercase text-neutral-400 font-bold block">
+                    Pilares de Desarrollo Integral
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {content.aboutUs.pillars.map((pillar, idx) => (
+                      <div key={pillar.id} className="p-4 bg-neutral-900/50 border border-neutral-800 rounded-xl space-y-2">
+                        <input
+                          type="text"
+                          value={pillar.title}
+                          onChange={(e) => {
+                            const updated = content.aboutUs.pillars.map((p, i) =>
+                              i === idx ? { ...p, title: e.target.value } : p
+                            );
+                            updateAboutUs({ pillars: updated });
+                            triggerSaveNotification('Pilar actualizado');
+                          }}
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#E6002B]"
+                        />
+                        <textarea
+                          rows={2}
+                          value={pillar.description}
+                          onChange={(e) => {
+                            const updated = content.aboutUs.pillars.map((p, i) =>
+                              i === idx ? { ...p, description: e.target.value } : p
+                            );
+                            updateAboutUs({ pillars: updated });
+                            triggerSaveNotification('Descripción del pilar actualizada');
+                          }}
+                          className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-300 focus:outline-none focus:border-[#E6002B] resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

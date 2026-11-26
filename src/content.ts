@@ -34,6 +34,7 @@ export const HERO = {
 
 export const NAV = [
   { id: 'home', label: 'Inicio' },
+  { id: 'quienes-somos', label: 'Quiénes Somos' },
   { id: 'squads', label: 'Categorías' },
   { id: 'method', label: 'Metodología' },
   { id: 'staff', label: 'Cuerpo Técnico' },
@@ -278,18 +279,28 @@ export const FOOTER_COLUMNS = [
   {
     title: 'Categorías',
     links: [
-      'Base (Sub 7-11)',
-      'Formativo (Sub 13-17)',
-      'Juveniles (Sub 19)',
-      'Primer Plantel',
+      { label: 'Base (Sub 7-11)', href: '#squads' },
+      { label: 'Formativo (Sub 13-17)', href: '#squads' },
+      { label: 'Juveniles (Sub 19)', href: '#squads' },
+      { label: 'Primer Plantel', href: '#plantilla' },
     ],
   },
   {
     title: 'El Club',
-    links: ['Historia', 'Cuerpo Técnico', 'Instalaciones', 'Contacto'],
+    links: [
+      { label: 'Quiénes Somos', href: '#quienes-somos' },
+      { label: 'Misión y Visión', href: '#quienes-somos' },
+      { label: 'Cuerpo Técnico', href: '#staff' },
+      { label: 'Sede y Contacto', href: '#contacto' },
+    ],
   },
   {
-    title: 'Soporte',
-    links: ['Inscripciones', 'Reglamento', 'Privacidad'],
+    title: 'Comunidad & Tienda',
+    links: [
+      { label: 'Inscripciones Escuela', href: '#escuela' },
+      { label: 'Tienda Oficial 3D', href: '#tienda' },
+      { label: 'Calendario Oficial', href: '#calendario' },
+      { label: 'Preguntas Frecuentes', href: '#faq' },
+    ],
   },
 ];

@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Product, CartItem } from '../types';
 import { PRODUCTS_DATA } from '../data/mockData';
 import { JerseyCustomizer3D } from './JerseyCustomizer3D';
-import { playUiClick, playWhoosh, playGoalCheer } from '../utils/soundEffects';
+import { playUiClick, playGoalCheer } from '../utils/soundEffects';
+import { useSiteContent } from '../utils/ContentContext';
 import confetti from 'canvas-confetti';
 import {
   ShoppingBag,
@@ -13,11 +14,9 @@ import {
   Trash2,
   Plus,
   Minus,
-  Sparkles,
   ShieldCheck,
   Truck,
   X,
-  ArrowRight,
   MessageSquare
 } from 'lucide-react';
 
@@ -32,6 +31,15 @@ interface StoreSectionProps {
   setIsCartOpen: (open: boolean) => void;
 }
 
+interface CompletedOrderSnapshot {
+  orderNumber: string;
+  items: CartItem[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  paymentMethod: 'qr' | 'card' | 'tigo';
+}
+
 export const StoreSection: React.FC<StoreSectionProps> = ({
   products: propProducts,
   cart,
@@ -42,6 +50,10 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
   isCartOpen,
   setIsCartOpen
 }) => {
+  const { content } = useSiteContent();
+  const whatsappDisplay = content.clubInfo.whatsapp || '+591 76543210';
+  const whatsappClean = whatsappDisplay.replace(/[^0-9]/g, '') || '59176543210';
+
   const [activeCategory, setActiveCategory] = useState<'all' | 'camisetas' | 'escuela' | 'entrenamiento' | 'accesorios'>('all');
   const [selectedProductForQuickAdd, setSelectedProductForQuickAdd] = useState<Product | null>(null);
   const [quickSize, setQuickSize] = useState<string>('M');
@@ -54,10 +66,11 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
   const [cardExpiry, setCardExpiry] = useState('11/28');
   const [cardCvv, setCardCvv] = useState('842');
   const [cardHolder, setCardHolder] = useState('Martín Careaga');
-  const [customerPhone, setCustomerPhone] = useState('+591 76543210');
+  const [customerPhone, setCustomerPhone] = useState(whatsappDisplay);
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
+  const [completedOrder, setCompletedOrder] = useState<CompletedOrderSnapshot | null>(null);
 
   // Close cart or modals on Escape key
   useEffect(() => {
@@ -77,7 +90,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isCartOpen, selectedProductForQuickAdd, isCheckoutOpen, checkoutStep, setIsCartOpen]);
 
-  const productList = propProducts || PRODUCTS_DATA;
+  const productList = propProducts && propProducts.length > 0 ? propProducts : PRODUCTS_DATA;
   const filteredProducts = productList.filter(
     (p) => activeCategory === 'all' || p.category === activeCategory
   );
@@ -86,10 +99,16 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
   const shipping = subtotal > 300 || subtotal === 0 ? 0 : 20;
   const total = subtotal + shipping;
 
-  const buildWhatsAppMessage = (customOrderCode?: string) => {
-    const code = customOrderCode || orderNumber || `MC-${Math.floor(100000 + Math.random() * 900000)}`;
-    const itemsText = cart.length > 0
-      ? cart
+  const buildWhatsAppMessage = (customOrderCode?: string, snapshot?: CompletedOrderSnapshot | null) => {
+    const activeItems = snapshot ? snapshot.items : cart;
+    const activeSubtotal = snapshot ? snapshot.subtotal : subtotal;
+    const activeShipping = snapshot ? snapshot.shipping : shipping;
+    const activeTotal = snapshot ? snapshot.total : total;
+    const activeMethod = snapshot ? snapshot.paymentMethod : paymentMethod;
+    const code = customOrderCode || snapshot?.orderNumber || orderNumber || `MC-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const itemsText = activeItems.length > 0
+      ? activeItems
           .map(
             (i, idx) =>
               `${idx + 1}. *${i.product.name}* (x${i.quantity})\n   • Talla: ${i.selectedSize}${
@@ -100,30 +119,31 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
       : '• 1x Camiseta Oficial Titular MC 2026/27 (Talla M)';
 
     const methodLabel =
-      paymentMethod === 'qr'
+      activeMethod === 'qr'
         ? 'Pago QR Simple Bolivia (ASOBAN / Banco Central)'
-        : paymentMethod === 'card'
+        : activeMethod === 'card'
         ? 'Tarjeta Débito/Crédito (Libélula / Red Enlace)'
         : 'Tigo Money Bolivia';
 
     const text =
-      `🏆 *NUEVO PEDIDO - CLUB MC EMPRENDER & ESCUELA MARTÍN CAREAGA*\n\n` +
+      `🏆 *NUEVO PEDIDO - CLUB MC & ESCUELA MARTÍN CAREAGA*\n\n` +
       `📦 *Código de Orden:* ${code}\n` +
       `👤 *Cliente:* ${cardHolder || 'Aficionado MC'}\n` +
-      `📱 *Teléfono:* ${customerPhone || '+591 76543210'}\n` +
+      `📱 *Teléfono:* ${customerPhone || whatsappDisplay}\n` +
       `📍 *Dirección de Entrega:* ${customerAddress || 'Entrega en Bolivia'}\n` +
       `💳 *Pasarela Seleccionada:* ${methodLabel}\n\n` +
       `📋 *DETALLE DEL PEDIDO:*\n${itemsText}\n\n` +
-      `💰 *Subtotal:* Bs. ${subtotal} BOB\n` +
-      `🚚 *Envío:* ${shipping === 0 ? 'GRATIS (+Bs. 300)' : `Bs. ${shipping} BOB`}\n` +
-      `🔥 *TOTAL A PAGAR:* Bs. ${total} BOB\n\n` +
+      `💰 *Subtotal:* Bs. ${activeSubtotal} BOB\n` +
+      `🚚 *Envío:* ${activeShipping === 0 ? 'GRATIS (+Bs. 300)' : `Bs. ${activeShipping} BOB`}\n` +
+      `🔥 *TOTAL A PAGAR:* Bs. ${activeTotal} BOB\n\n` +
       `Hola Escuela Martín Careaga, acabo de solicitar mi pedido en la web oficial. Adjunto esta notificación para la confirmación de tallas y despacho inmediato.`;
 
-    return `https://wa.me/59176543210?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/${whatsappClean}?text=${encodeURIComponent(text)}`;
   };
 
   const handleStartCheckout = () => {
     playUiClick();
+    setCompletedOrder(null);
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
     setCheckoutStep('form');
@@ -134,13 +154,27 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
     playUiClick();
     setCheckoutStep('processing');
 
+    // Snapshot order details before cart is cleared
+    const itemsSnapshot = cart.map((item) => ({ ...item }));
+    const subtotalSnapshot = subtotal;
+    const shippingSnapshot = shipping;
+    const totalSnapshot = total;
+    const methodSnapshot = paymentMethod;
+
     setTimeout(() => {
       const generatedOrder = `MC-${Math.floor(100000 + Math.random() * 900000)}`;
       setOrderNumber(generatedOrder);
+      setCompletedOrder({
+        orderNumber: generatedOrder,
+        items: itemsSnapshot,
+        subtotal: subtotalSnapshot,
+        shipping: shippingSnapshot,
+        total: totalSnapshot,
+        paymentMethod: methodSnapshot
+      });
       setCheckoutStep('success');
       playGoalCheer();
 
-      // Launch sports celebration confetti
       try {
         confetti({
           particleCount: 80,
@@ -156,26 +190,29 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
     }, 1800);
   };
 
+  const displayedPaidTotal = completedOrder ? completedOrder.total : total;
+  const displayedPaymentMethod = completedOrder ? completedOrder.paymentMethod : paymentMethod;
+
   return (
     <section id="tienda" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-neutral-800 gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 pb-6 border-b border-slate-200 dark:border-neutral-800 gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-[#E6002B] uppercase tracking-wider mb-2">
             <span>Tienda Oficial MC & Indumentaria Escuela</span>
             <span aria-hidden="true">·</span>
             <span>Envíos Seguros & Garantía de Calidad</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold font-display text-white tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold font-display text-slate-900 dark:text-white tracking-tight">
             TIENDA OFICIAL CLUB MC
           </h2>
-          <p className="text-sm text-neutral-400 mt-1 max-w-xl">
+          <p className="text-sm text-slate-600 dark:text-neutral-400 mt-1 max-w-xl">
             Viste los colores del Primer Plantel y equípate con los uniformes oficiales reglamentarios de la Escuela de Fútbol Martín Careaga.
           </p>
         </div>
 
         {/* Categories Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-neutral-900 border border-neutral-800 rounded-xl overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl overflow-x-auto max-w-full">
           {[
             { id: 'all', label: 'Todos' },
             { id: 'camisetas', label: 'Camisetas Pro' },
@@ -187,12 +224,12 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
               key={cat.id}
               onClick={() => {
                 playUiClick();
-                setActiveCategory(cat.id as any);
+                setActiveCategory(cat.id as 'all' | 'camisetas' | 'escuela' | 'entrenamiento' | 'accesorios');
               }}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                 activeCategory === cat.id
                   ? 'bg-[#E6002B] text-white shadow-sm'
-                  : 'text-neutral-400 hover:text-white'
+                  : 'text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {cat.label}
@@ -202,42 +239,42 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
       </div>
 
       {/* INFORMATIONAL BANNER: BOLIVIAN PAYMENT GATEWAYS & WHATSAPP NOTIFICATIONS */}
-      <div className="mb-10 p-4 sm:p-5 bg-gradient-to-r from-neutral-900/90 via-[#0E0E12] to-neutral-900/90 rounded-2xl border border-neutral-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="mb-10 p-4 sm:p-5 bg-white dark:bg-gradient-to-r dark:from-neutral-900/90 dark:via-[#0E0E12] dark:to-neutral-900/90 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-sm dark:shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-700/60 flex items-center justify-center text-emerald-400 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-700/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 Pasarelas de Pago Seguras en Bolivia & Notificación por WhatsApp
               </span>
-              <span className="px-2 py-0.5 rounded bg-[#E6002B]/20 text-[#FF1A40] text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded bg-red-50 dark:bg-[#E6002B]/20 text-[#E6002B] dark:text-[#FF1A40] text-[10px] font-bold border border-red-200 dark:border-transparent">
                 Precios en Bs. (BOB)
               </span>
             </div>
-            <p className="text-xs text-neutral-400 mt-0.5">
-              Aceptamos <strong className="text-neutral-200">QR Simple Interbancario ASOBAN</strong> (BCP, BNB, Banco Unión, Bisa, FIE), <strong className="text-neutral-200">Tarjetas Visa/Mastercard (Libélula / Red Enlace)</strong> y <strong className="text-neutral-200">Tigo Money</strong>. Al solicitar tu pedido, se emite una alerta instantánea a WhatsApp para preparar tu envío.
+            <p className="text-xs text-slate-600 dark:text-neutral-400 mt-0.5">
+              Aceptamos <strong className="text-slate-900 dark:text-neutral-200">QR Simple Interbancario ASOBAN</strong> (BCP, BNB, Banco Unión, Bisa, FIE), <strong className="text-slate-900 dark:text-neutral-200">Tarjetas Visa/Mastercard (Libélula / Red Enlace)</strong> y <strong className="text-slate-900 dark:text-neutral-200">Tigo Money</strong>. Al solicitar tu pedido, se emite una alerta instantánea a WhatsApp para preparar tu envío.
             </p>
           </div>
         </div>
 
         <a
-          href="https://wa.me/59176543210?text=Hola%2C%20quisiera%20consultar%20sobre%20la%20indumentaria%20oficial%20de%20la%20Escuela%20de%20F%C3%BAtbol%20Mart%C3%ADn%20Careaga%20y%20m%C3%A9todos%20de%20pago%20en%20Bolivia."
+          href={`https://wa.me/${whatsappClean}?text=${encodeURIComponent('Hola, quisiera consultar sobre la indumentaria oficial de la Escuela de Fútbol Martín Careaga y métodos de pago en Bolivia.')}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={playUiClick}
-          className="shrink-0 px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/50 text-emerald-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+          className="shrink-0 px-4 py-2 bg-emerald-50 dark:bg-emerald-600/20 hover:bg-emerald-100 dark:hover:bg-emerald-600/30 border border-emerald-200 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
         >
-          <MessageSquare className="w-4 h-4 text-emerald-400" />
-          <span>Atención WhatsApp (+591 76543210)</span>
+          <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Atención WhatsApp ({whatsappDisplay})</span>
         </a>
       </div>
 
       {/* FEATURED: 3D JERSEY CUSTOMIZER SHOWCASE */}
       <div className="mb-14">
         <JerseyCustomizer3D
-          product={PRODUCTS_DATA[0]}
+          product={productList[0] || PRODUCTS_DATA[0]}
           onAddToCart={onAddToCart}
         />
       </div>
@@ -247,13 +284,13 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
         {filteredProducts.map((product) => (
           <div
             key={product.id}
-            className="bg-[#0C0C0E] border border-neutral-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-neutral-700 transition-all duration-200 group"
+            className="bg-white dark:bg-[#0C0C0E] border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-neutral-700 hover:shadow-md dark:hover:shadow-none transition-all duration-200 group shadow-sm dark:shadow-none"
           >
             {/* Product Visual Container */}
-            <div className="relative aspect-[4/3] bg-gradient-to-b from-neutral-900 to-[#0A0A0C] flex items-center justify-center p-6 border-b border-neutral-800/80 overflow-hidden">
+            <div className="relative aspect-[4/3] bg-gradient-to-b from-slate-100 to-slate-200/70 dark:from-neutral-900 dark:to-[#0A0A0C] flex items-center justify-center p-6 border-b border-slate-200 dark:border-neutral-800/80 overflow-hidden">
               {/* Badge */}
               <div className="absolute top-3 left-3 z-10">
-                <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded bg-white/90 dark:bg-black/60 border border-slate-200 dark:border-white/10 text-[11px] font-semibold text-slate-700 dark:text-neutral-300 uppercase tracking-wider">
                   {product.badge}
                 </span>
               </div>
@@ -264,10 +301,10 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full max-h-48 object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.7)] rounded-lg"
+                    className="w-full h-full max-h-48 object-contain filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.28)] dark:drop-shadow-[0_12px_20px_rgba(0,0,0,0.7)] rounded-lg"
                   />
                 ) : product.category === 'camisetas' || product.category === 'escuela' ? (
-                  <svg viewBox="0 0 160 160" className="w-36 h-36 filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.6)]">
+                  <svg viewBox="0 0 160 160" className="w-36 h-36 filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.25)] dark:drop-shadow-[0_10px_15px_rgba(0,0,0,0.6)]">
                     <path
                       d="M50 20 L70 30 Q80 35 90 30 L110 20 L140 50 L125 75 L115 65 L115 150 L45 150 L45 65 L35 75 L20 50 Z"
                       fill={product.category === 'escuela' ? '#141418' : '#E6002B'}
@@ -289,7 +326,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                     )}
                   </svg>
                 ) : (
-                  <svg viewBox="0 0 160 160" className="w-32 h-32 filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.6)]">
+                  <svg viewBox="0 0 160 160" className="w-32 h-32 filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.25)] dark:drop-shadow-[0_10px_15px_rgba(0,0,0,0.6)]">
                     <rect x="30" y="30" width="100" height="100" rx="16" fill="#18181D" stroke="#333" strokeWidth="2" />
                     <circle cx="80" cy="70" r="24" fill="#0E0E12" stroke="#E6002B" strokeWidth="2" />
                     <text x="80" y="75" fill="#E6002B" fontSize="14" fontWeight="bold" textAnchor="middle">
@@ -304,26 +341,26 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
             {/* Product Body */}
             <div className="p-5 flex-1 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-xs text-neutral-400 mb-1">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-neutral-400 mb-1">
                   <span>Stock: {product.stock} unidades</span>
-                  <span>★ {product.rating}</span>
+                  <span className="text-amber-500 dark:text-amber-400 font-semibold">★ {product.rating}</span>
                 </div>
-                <h3 className="text-lg font-bold font-display text-white group-hover:text-[#FF1A40] transition-colors leading-snug">
+                <h3 className="text-lg font-bold font-display text-slate-900 dark:text-white group-hover:text-[#E6002B] dark:group-hover:text-[#FF1A40] transition-colors leading-snug">
                   {product.name}
                 </h3>
-                <p className="text-xs text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-neutral-400 mt-2 line-clamp-2 leading-relaxed">
                   {product.description}
                 </p>
               </div>
 
               {/* Price & Action */}
-              <div className="mt-5 pt-4 border-t border-neutral-800 flex items-center justify-between">
+              <div className="mt-5 pt-4 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-between">
                 <div>
-                  <span className="text-xl font-bold font-mono-numbers text-white">
+                  <span className="text-xl font-bold font-mono-numbers text-slate-900 dark:text-white">
                     Bs. {product.price}
                   </span>
                   {product.originalPrice && (
-                    <span className="text-xs line-through text-neutral-500 font-mono-numbers ml-2">
+                    <span className="text-xs line-through text-slate-400 dark:text-neutral-500 font-mono-numbers ml-2">
                       Bs. {product.originalPrice}
                     </span>
                   )}
@@ -336,7 +373,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                       const element = document.getElementById('tienda');
                       element?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="px-3.5 py-1.5 text-xs font-semibold text-neutral-200 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 rounded-lg transition-colors cursor-pointer"
+                    className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-neutral-200 bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-700 rounded-lg transition-colors cursor-pointer"
                   >
                     Personalizar 3D
                   </button>
@@ -362,16 +399,16 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
       {selectedProductForQuickAdd && createPortal(
         <div
           onClick={() => setSelectedProductForQuickAdd(null)}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#101014] border border-neutral-700 rounded-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in-95"
+            className="bg-white dark:bg-[#101014] border border-slate-200 dark:border-neutral-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95"
           >
-            <h4 className="text-lg font-bold font-display text-white mb-1">
+            <h4 className="text-lg font-bold font-display text-slate-900 dark:text-white mb-1">
               Seleccionar Talle
             </h4>
-            <p className="text-xs text-neutral-400 mb-4">
+            <p className="text-xs text-slate-600 dark:text-neutral-400 mb-4">
               {selectedProductForQuickAdd.name}
             </p>
 
@@ -386,7 +423,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer ${
                     quickSize === s
                       ? 'border-[#E6002B] bg-[#E6002B] text-white'
-                      : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                      : 'border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900 text-slate-700 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {s}
@@ -397,7 +434,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedProductForQuickAdd(null)}
-                className="flex-1 py-2 text-xs font-semibold text-neutral-400 hover:text-white bg-neutral-900 rounded-lg cursor-pointer"
+                className="flex-1 py-2 text-xs font-semibold text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 dark:hover:bg-neutral-800 rounded-lg cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
@@ -408,7 +445,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                   setSelectedProductForQuickAdd(null);
                   setIsCartOpen(true);
                 }}
-                className="flex-1 py-2 text-xs font-semibold text-white bg-[#E6002B] hover:bg-[#FF1A40] rounded-lg cursor-pointer"
+                className="flex-1 py-2 text-xs font-semibold text-white bg-[#E6002B] hover:bg-[#FF1A40] rounded-lg cursor-pointer transition-colors"
               >
                 Añadir al Carrito
               </button>
@@ -425,18 +462,18 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
             playUiClick();
             setIsCartOpen(false);
           }}
-          className="fixed inset-0 z-[100] overflow-hidden bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] overflow-hidden bg-slate-900/50 dark:bg-black/70 backdrop-blur-sm"
         >
           <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-screen max-w-md bg-[#0D0D10] border-l border-neutral-800 shadow-2xl flex flex-col justify-between"
+              className="w-screen max-w-md bg-white dark:bg-[#0D0D10] border-l border-slate-200 dark:border-neutral-800 shadow-2xl flex flex-col justify-between"
             >
               {/* Cart Header */}
-              <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
+              <div className="p-6 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <ShoppingBag className="w-5 h-5 text-[#E6002B]" />
-                  <h3 className="text-lg font-bold font-display text-white">
+                  <h3 className="text-lg font-bold font-display text-slate-900 dark:text-white">
                     TU CARRITO ({cart.reduce((s, i) => s + i.quantity, 0)})
                   </h3>
                 </div>
@@ -447,7 +484,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                     playUiClick();
                     setIsCartOpen(false);
                   }}
-                  className="w-8 h-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors"
+                  className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 dark:hover:bg-neutral-800 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -457,23 +494,23 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
               <div className="p-6 overflow-y-auto flex-1 space-y-4">
                 {cart.length === 0 ? (
                   <div className="text-center py-16">
-                    <ShoppingBag className="w-12 h-12 text-neutral-700 mx-auto mb-3" />
-                    <p className="text-sm text-neutral-400 font-medium">El carrito está vacío</p>
-                    <p className="text-xs text-neutral-600 mt-1">Explora la tienda o personaliza tu camiseta oficial.</p>
+                    <ShoppingBag className="w-12 h-12 text-slate-300 dark:text-neutral-700 mx-auto mb-3" />
+                    <p className="text-sm text-slate-700 dark:text-neutral-400 font-medium">El carrito está vacío</p>
+                    <p className="text-xs text-slate-500 dark:text-neutral-600 mt-1">Explora la tienda o personaliza tu camiseta oficial.</p>
                   </div>
                 ) : (
                   cart.map((item) => (
                     <div
                       key={item.cartItemId}
-                      className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-4 flex gap-4 items-start"
+                      className="bg-slate-50 dark:bg-neutral-900/60 border border-slate-200 dark:border-neutral-800 rounded-xl p-4 flex gap-4 items-start"
                     >
-                      <div className="w-16 h-16 bg-neutral-950 rounded-lg flex items-center justify-center shrink-0 border border-neutral-800 font-display font-black text-xl text-[#E6002B]">
+                      <div className="w-16 h-16 bg-white dark:bg-neutral-950 rounded-lg flex items-center justify-center shrink-0 border border-slate-200 dark:border-neutral-800 font-display font-black text-xl text-[#E6002B]">
                         {item.customNumber || 'MC'}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white truncate">{item.product.name}</h4>
-                        <div className="text-xs text-neutral-400 mt-1 flex flex-wrap gap-x-2">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.product.name}</h4>
+                        <div className="text-xs text-slate-500 dark:text-neutral-400 mt-1 flex flex-wrap gap-x-2">
                           <span>Talle: {item.selectedSize}</span>
                           {item.customName && (
                             <span>· Estampado: {item.customName} (#{item.customNumber})</span>
@@ -481,38 +518,44 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                         </div>
 
                         <div className="flex items-center justify-between mt-3">
-                          <span className="text-sm font-bold font-mono-numbers text-white">
+                          <span className="text-sm font-bold font-mono-numbers text-slate-900 dark:text-white">
                             Bs. {item.product.price * item.quantity}
                           </span>
 
                           <div className="flex items-center gap-2">
                             <button
+                              type="button"
+                              aria-label="Disminuir cantidad"
                               onClick={() => {
                                 playUiClick();
                                 onUpdateCartQty(item.cartItemId, item.quantity - 1);
                               }}
-                              className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-300 cursor-pointer"
+                              className="w-6 h-6 rounded bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 flex items-center justify-center text-slate-700 dark:text-neutral-300 cursor-pointer"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className="text-xs font-mono-numbers font-semibold text-white px-1">
+                            <span className="text-xs font-mono-numbers font-semibold text-slate-900 dark:text-white px-1">
                               {item.quantity}
                             </span>
                             <button
+                              type="button"
+                              aria-label="Aumentar cantidad"
                               onClick={() => {
                                 playUiClick();
                                 onUpdateCartQty(item.cartItemId, item.quantity + 1);
                               }}
-                              className="w-6 h-6 rounded bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-300 cursor-pointer"
+                              className="w-6 h-6 rounded bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 flex items-center justify-center text-slate-700 dark:text-neutral-300 cursor-pointer"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                             <button
+                              type="button"
+                              aria-label="Eliminar producto"
                               onClick={() => {
                                 playUiClick();
                                 onRemoveFromCart(item.cartItemId);
                               }}
-                              className="ml-2 text-neutral-500 hover:text-red-400 transition-colors cursor-pointer"
+                              className="ml-2 text-slate-400 dark:text-neutral-500 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -526,18 +569,18 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
 
               {/* Cart Footer Summary */}
               {cart.length > 0 && (
-                <div className="p-6 border-t border-neutral-800 bg-[#09090C] space-y-3">
-                  <div className="flex justify-between text-xs text-neutral-400">
+                <div className="p-6 border-t border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-[#09090C] space-y-3">
+                  <div className="flex justify-between text-xs text-slate-600 dark:text-neutral-400">
                     <span>Subtotal</span>
-                    <span className="font-mono-numbers text-white">Bs. {subtotal}</span>
+                    <span className="font-mono-numbers text-slate-900 dark:text-white font-semibold">Bs. {subtotal}</span>
                   </div>
-                  <div className="flex justify-between text-xs text-neutral-400">
+                  <div className="flex justify-between text-xs text-slate-600 dark:text-neutral-400">
                     <span>Envío a toda Bolivia</span>
-                    <span className="font-mono-numbers text-white">
+                    <span className="font-mono-numbers text-slate-900 dark:text-white font-semibold">
                       {shipping === 0 ? 'Gratis (+Bs. 300)' : `Bs. ${shipping}`}
                     </span>
                   </div>
-                  <div className="flex justify-between text-base font-bold text-white pt-2 border-t border-neutral-800">
+                  <div className="flex justify-between text-base font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-neutral-800">
                     <span>Total</span>
                     <span className="font-mono-numbers text-[#E6002B] text-lg">Bs. {total}</span>
                   </div>
@@ -555,7 +598,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={playUiClick}
-                    className="w-full py-2.5 bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-2.5 bg-emerald-50 dark:bg-emerald-600/15 hover:bg-emerald-100 dark:hover:bg-emerald-600/25 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Pedir Directo por WhatsApp</span>
@@ -574,16 +617,18 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
           onClick={() => {
             if (checkoutStep !== 'processing') setIsCheckoutOpen(false);
           }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/65 dark:bg-black/85 backdrop-blur-md"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl bg-[#0E0E12] border border-neutral-700 rounded-2xl p-6 sm:p-8 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95"
+            className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-white dark:bg-[#0E0E12] border border-slate-200 dark:border-neutral-700 rounded-2xl p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95"
           >
             {checkoutStep !== 'processing' && (
               <button
+                type="button"
+                aria-label="Cerrar pasarela de pago"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-300 hover:text-white transition-colors cursor-pointer z-10"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 flex items-center justify-center text-slate-600 dark:text-neutral-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer z-10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -596,14 +641,14 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                   <ShieldCheck className="w-4 h-4" />
                   <span>Pasarela de Pago Segura Cifrada 256-bit</span>
                 </div>
-                <h3 className="text-2xl font-bold font-display text-white">
+                <h3 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
                   FINALIZAR PEDIDO OFICIAL
                 </h3>
 
                 {/* Total pill */}
-                <div className="p-3 bg-neutral-900/80 rounded-xl border border-neutral-800 flex justify-between items-center text-xs">
-                  <span className="text-neutral-400">Total a pagar:</span>
-                  <span className="font-bold text-white font-mono-numbers text-base">
+                <div className="p-3 bg-slate-50 dark:bg-neutral-900/80 rounded-xl border border-slate-200 dark:border-neutral-800 flex justify-between items-center text-xs">
+                  <span className="text-slate-600 dark:text-neutral-400">Total a pagar:</span>
+                  <span className="font-bold text-slate-900 dark:text-white font-mono-numbers text-base">
                     Bs. {total} BOB
                   </span>
                 </div>
@@ -611,7 +656,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                 {/* Customer Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold uppercase text-neutral-400 block mb-1">
+                    <label className="text-[11px] font-semibold uppercase text-slate-600 dark:text-neutral-400 block mb-1">
                       Nombre Completo
                     </label>
                     <input
@@ -620,11 +665,11 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                       value={cardHolder}
                       onChange={(e) => setCardHolder(e.target.value)}
                       placeholder="Ej: Martín Careaga"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                      className="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-[#E6002B]"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold uppercase text-neutral-400 block mb-1">
+                    <label className="text-[11px] font-semibold uppercase text-slate-600 dark:text-neutral-400 block mb-1">
                       Teléfono / WhatsApp (Notificaciones)
                     </label>
                     <input
@@ -633,11 +678,11 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="+591 76543210"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                      className="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-[#E6002B]"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-[11px] font-semibold uppercase text-neutral-400 block mb-1">
+                    <label className="text-[11px] font-semibold uppercase text-slate-600 dark:text-neutral-400 block mb-1">
                       Correo Electrónico
                     </label>
                     <input
@@ -646,27 +691,27 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                       placeholder="tu-email@gmail.com"
                       value={customerEmail}
                       onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                      className="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-[#E6002B]"
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="text-[11px] font-semibold uppercase text-neutral-400 block mb-1">
+                    <label className="text-[11px] font-semibold uppercase text-slate-600 dark:text-neutral-400 block mb-1">
                       Dirección de Entrega en Bolivia (Ciudad, Zona, Calle)
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Santa Cruz de la Sierra / La Paz / Cochabamba, Calle Los Sauces 450"
+                      placeholder="Ej: La Paz / Santa Cruz / Cochabamba, Av. Principal 450"
                       value={customerAddress}
                       onChange={(e) => setCustomerAddress(e.target.value)}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#E6002B]"
+                      className="w-full bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-neutral-500 focus:outline-none focus:border-[#E6002B]"
                     />
                   </div>
                 </div>
 
                 {/* Payment Method Selector */}
                 <div>
-                  <label className="text-[11px] font-semibold uppercase text-neutral-400 block mb-2">
+                  <label className="text-[11px] font-semibold uppercase text-slate-600 dark:text-neutral-400 block mb-2">
                     Método de Pago Seguro
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -682,12 +727,12 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                           type="button"
                           onClick={() => {
                             playUiClick();
-                            setPaymentMethod(m.id as any);
+                            setPaymentMethod(m.id as 'qr' | 'card' | 'tigo');
                           }}
                           className={`p-2.5 rounded-lg border text-left flex flex-col gap-1 transition-all cursor-pointer ${
                             paymentMethod === m.id
-                              ? 'border-[#E6002B] bg-[#E6002B]/10 text-white'
-                              : 'border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white'
+                              ? 'border-[#E6002B] bg-red-50 dark:bg-[#E6002B]/10 text-slate-900 dark:text-white'
+                              : 'border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-950 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           <Icon className="w-4 h-4 text-[#E6002B]" />
@@ -700,8 +745,8 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
 
                 {/* QR Simple visual if QR is selected */}
                 {paymentMethod === 'qr' && (
-                  <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 flex items-center gap-4">
-                    <div className="w-20 h-20 bg-white p-1 rounded-lg flex items-center justify-center shrink-0">
+                  <div className="p-4 bg-slate-50 dark:bg-neutral-950 rounded-xl border border-slate-200 dark:border-neutral-800 flex items-center gap-4">
+                    <div className="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 dark:border-transparent flex items-center justify-center shrink-0">
                       <svg viewBox="0 0 100 100" className="w-full h-full">
                         <rect x="10" y="10" width="30" height="30" fill="#000" />
                         <rect x="15" y="15" width="20" height="20" fill="#fff" />
@@ -717,8 +762,8 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                       </svg>
                     </div>
                     <div className="text-xs">
-                      <span className="font-bold text-white block">Código QR Simple Bolivia</span>
-                      <span className="text-neutral-400 leading-relaxed block mt-0.5">
+                      <span className="font-bold text-slate-900 dark:text-white block">Código QR Simple Bolivia</span>
+                      <span className="text-slate-600 dark:text-neutral-400 leading-relaxed block mt-0.5">
                         Escanea desde Banco Unión, BCP, BNB, Banco FIE, Banco Mercantil o tu app bancaria boliviana favorita.
                       </span>
                     </div>
@@ -727,32 +772,32 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
 
                 {/* Card Fields if Card Selected */}
                 {paymentMethod === 'card' && (
-                  <div className="p-4 bg-neutral-950 rounded-xl border border-neutral-800 space-y-3">
+                  <div className="p-4 bg-slate-50 dark:bg-neutral-950 rounded-xl border border-slate-200 dark:border-neutral-800 space-y-3">
                     <div>
-                      <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">
+                      <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-neutral-500 block mb-1">
                         Número de Tarjeta (Habilitada para compras por internet)
                       </label>
                       <input
                         type="text"
                         value={cardNumber}
                         onChange={(e) => setCardNumber(e.target.value)}
-                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
+                        className="w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">
+                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-neutral-500 block mb-1">
                           Vencimiento (MM/AA)
                         </label>
                         <input
                           type="text"
                           value={cardExpiry}
                           onChange={(e) => setCardExpiry(e.target.value)}
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
+                          className="w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] font-semibold uppercase text-neutral-500 block mb-1">
+                        <label className="text-[10px] font-semibold uppercase text-slate-500 dark:text-neutral-500 block mb-1">
                           Código CVC / CVV
                         </label>
                         <input
@@ -760,7 +805,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                           maxLength={4}
                           value={cardCvv}
                           onChange={(e) => setCardCvv(e.target.value)}
-                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-xs text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
+                          className="w-full bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white font-mono-numbers focus:outline-none focus:border-[#E6002B]"
                         />
                       </div>
                     </div>
@@ -782,10 +827,10 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
             {checkoutStep === 'processing' && (
               <div className="py-16 text-center space-y-4">
                 <div className="w-16 h-16 border-4 border-[#E6002B] border-t-transparent rounded-full animate-spin mx-auto" />
-                <h4 className="text-xl font-bold font-display text-white">
+                <h4 className="text-xl font-bold font-display text-slate-900 dark:text-white">
                   PROCESANDO COMPRA SEGURA...
                 </h4>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-slate-600 dark:text-neutral-400">
                   Validando credenciales con la red bancaria y reservando tu indumentaria oficial.
                 </p>
               </div>
@@ -794,51 +839,51 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
             {/* Step 3: Success Confirmation State */}
             {checkoutStep === 'success' && (
               <div className="py-6 text-center space-y-4">
-                <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-400">
+                <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400">
                   <CheckCircle className="w-8 h-8" />
                 </div>
-                <h4 className="text-2xl font-bold font-display text-white">
+                <h4 className="text-2xl font-bold font-display text-slate-900 dark:text-white">
                   ¡PAGO REGISTRADO CON ÉXITO!
                 </h4>
-                <p className="text-xs text-neutral-300 max-w-md mx-auto leading-relaxed">
-                  Tu orden ha sido procesada mediante la pasarela segura para Bolivia ({paymentMethod === 'qr' ? 'QR Simple Interbancario ASOBAN' : paymentMethod === 'card' ? 'Red Enlace ATC / Cybersource' : 'Tigo Money'}).
+                <p className="text-xs text-slate-600 dark:text-neutral-300 max-w-md mx-auto leading-relaxed">
+                  Tu orden ha sido procesada mediante la pasarela segura para Bolivia ({displayedPaymentMethod === 'qr' ? 'QR Simple Interbancario ASOBAN' : displayedPaymentMethod === 'card' ? 'Red Enlace ATC / Cybersource' : 'Tigo Money'}).
                 </p>
 
-                <div className="p-4 bg-neutral-900/80 rounded-xl border border-neutral-800 text-left space-y-2 max-w-sm mx-auto text-xs">
+                <div className="p-4 bg-slate-50 dark:bg-neutral-900/80 rounded-xl border border-slate-200 dark:border-neutral-800 text-left space-y-2 max-w-sm mx-auto text-xs">
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Código de Orden:</span>
-                    <span className="font-mono-numbers font-bold text-white">{orderNumber}</span>
+                    <span className="text-slate-500 dark:text-neutral-400">Código de Orden:</span>
+                    <span className="font-mono-numbers font-bold text-slate-900 dark:text-white">{orderNumber}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Pasarela Utilizada:</span>
-                    <span className="text-emerald-400 font-semibold">
-                      {paymentMethod === 'qr' ? 'QR Simple Bolivia' : paymentMethod === 'card' ? 'Tarjeta Débito/Crédito' : 'Tigo Money'}
+                    <span className="text-slate-500 dark:text-neutral-400">Pasarela Utilizada:</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                      {displayedPaymentMethod === 'qr' ? 'QR Simple Bolivia' : displayedPaymentMethod === 'card' ? 'Tarjeta Débito/Crédito' : 'Tigo Money'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Total Facturado:</span>
-                    <span className="font-bold text-white font-mono-numbers">Bs. {total} BOB</span>
+                    <span className="text-slate-500 dark:text-neutral-400">Total Facturado:</span>
+                    <span className="font-bold text-slate-900 dark:text-white font-mono-numbers">Bs. {displayedPaidTotal} BOB</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Entrega Estimada:</span>
-                    <span className="text-white">24 a 48 hs en Bolivia</span>
+                    <span className="text-slate-500 dark:text-neutral-400">Entrega Estimada:</span>
+                    <span className="text-slate-900 dark:text-white">24 a 48 hs en Bolivia</span>
                   </div>
                 </div>
 
                 {/* Direct WhatsApp Order Notification Button */}
                 <div className="pt-2 max-w-sm mx-auto space-y-2">
                   <a
-                    href={buildWhatsAppMessage(orderNumber)}
+                    href={buildWhatsAppMessage(orderNumber, completedOrder)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={playUiClick}
-                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer shadow-emerald-900/30"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer shadow-emerald-900/20"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    <span>Enviar Notificación a WhatsApp (+591 76543210)</span>
+                    <span>Enviar Notificación a WhatsApp ({whatsappDisplay})</span>
                   </a>
 
-                  <p className="text-[11px] text-neutral-400">
+                  <p className="text-[11px] text-slate-500 dark:text-neutral-400">
                     *Al pulsar el botón se abrirá WhatsApp con el resumen completo de tu pedido (código, tallas, dorsal y dirección) listo para confirmar.
                   </p>
                 </div>
@@ -846,7 +891,7 @@ export const StoreSection: React.FC<StoreSectionProps> = ({
                 <div className="pt-2">
                   <button
                     onClick={() => setIsCheckoutOpen(false)}
-                    className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs rounded-xl transition-colors cursor-pointer"
+                    className="px-6 py-2.5 bg-slate-200 dark:bg-neutral-800 hover:bg-slate-300 dark:hover:bg-neutral-700 text-slate-900 dark:text-white font-semibold text-xs rounded-xl transition-colors cursor-pointer"
                   >
                     Volver a la Tienda Oficial
                   </button>

@@ -287,7 +287,7 @@ export const ThreeSoccerBallHero: React.FC = () => {
 
       {/* Floating 3D Interactive Badge */}
       <div className="absolute bottom-2 inset-x-0 flex items-center justify-center pointer-events-none">
-        <div className="px-3 py-1 rounded-full bg-neutral-900/80 border border-neutral-700/80 backdrop-blur-md text-[11px] font-semibold text-neutral-300 flex items-center gap-1.5 shadow-lg">
+        <div className="px-3 py-1 rounded-full bg-white/90 dark:bg-neutral-900/85 border border-slate-200 dark:border-neutral-700/80 backdrop-blur-md text-[11px] font-semibold text-slate-700 dark:text-neutral-300 flex items-center gap-1.5 shadow-sm dark:shadow-lg">
           <RotateCw className="w-3 h-3 text-[#E6002B] animate-spin" style={{ animationDuration: '6s' }} />
           <span>Balón 3D WebGL: Arrastra o Haz Clic</span>
           {bouncedCount > 0 && (

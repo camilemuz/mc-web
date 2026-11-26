@@ -3,7 +3,7 @@ import { Product, CartItem, Match, NewsArticle, Player, AcademyLead } from './ty
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { HeroFigmaStage } from './components/HeroFigmaStage';
-import { SiteChrome } from './components/SiteChrome';
+import { SectionAboutUs } from './components/SectionAboutUs';
 import { SectionSquads } from './components/SectionSquads';
 import { SectionMethod } from './components/SectionMethod';
 import { SectionStaff } from './components/SectionStaff';
@@ -21,11 +21,9 @@ import { CalendarSection } from './components/CalendarSection';
 import { FanZoneSection } from './components/FanZoneSection';
 import { NewsSection } from './components/NewsSection';
 import { ContactDirectSection } from './components/ContactDirectSection';
-import { Footer } from './components/Footer';
 import { AdminLoginModal } from './components/AdminLoginModal';
 import { AdminCMSModal } from './components/AdminCMSModal';
 import { PRODUCTS_DATA, CURRENT_LIVE_MATCH, NEWS_DATA, PLAYERS_DATA } from './data/mockData';
-import { DOMAINS, CLAIMS } from './content';
 import { useSiteContent } from './utils/ContentContext';
 
 export default function App() {
@@ -300,17 +298,14 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white relative selection:bg-[#E6002B] selection:text-white">
+    <div className="min-h-screen bg-[#F4F6F8] dark:bg-[#08080A] text-slate-900 dark:text-white relative selection:bg-[#E6002B] selection:text-white transition-colors duration-300">
       {/* Scroll Progress Bar at very top */}
       <ScrollProgress />
 
       {/* Lenis Smooth Scroll Engine */}
       <SmoothScroll />
 
-      {/* Site Chrome: Sticky Header past 75vh and Mobile Menu Overlay */}
-      <SiteChrome />
-
-      {/* Top Bar with Admin login trigger */}
+      {/* Top Bar with Admin login trigger & active section tracking */}
       <Navbar
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
@@ -325,6 +320,9 @@ export default function App() {
             el?.scrollIntoView({ behavior: 'smooth' });
           }}
         />
+
+        {/* QUIÉNES SOMOS: Misión, Visión y Pilares Formativos */}
+        <SectionAboutUs />
 
         {/* SECTION-09: Squads (Eight-row selector against a live glass card) */}
         <SectionSquads />
@@ -348,12 +346,12 @@ export default function App() {
         <SectionFaq />
 
         {/* Additional Interactive Experience Features: 3D Interactive Center, Match Center & Official Store */}
-        <div className="border-t border-white/10 pt-16">
+        <div className="border-t border-slate-200 dark:border-white/10 pt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#e60000] bg-[#e60000]/10 px-3 py-1 rounded-full border border-[#e60000]/20 inline-block mb-2">
-              ECOSISTEMA DIGITAL CLUB MC
+            <span className="text-xs font-mono uppercase tracking-widest text-[#E6002B] font-bold inline-block mb-2">
+              Ecosistema Digital Club MC
             </span>
-            <h3 className="text-2xl sm:text-4xl font-extrabold font-display text-white">
+            <h3 className="text-2xl sm:text-4xl font-extrabold font-display text-slate-900 dark:text-white">
               PARTIDOS EN VIVO, PLANTILLA Y TIENDA 3D
             </h3>
           </div>
@@ -397,7 +395,7 @@ export default function App() {
           <NewsSection news={news} />
 
           {/* Direct Contact */}
-          <ContactDirectSection />
+          <ContactDirectSection onNewLead={handleNewLead} />
         </div>
       </main>
 

@@ -19,8 +19,22 @@
     <meta name="twitter:image" content="/logo-mc-shield.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Bebas+Neue&family=Montserrat:ital,wght@0,700;0,800;0,900;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('mc_theme');
+          if (saved === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-[#050505] text-neutral-100 antialiased selection:bg-[#E6002B] selection:text-white overflow-x-hidden min-h-screen">
+  <body class="bg-[#F4F6F8] dark:bg-[#08080A] text-slate-900 dark:text-neutral-100 antialiased selection:bg-[#E6002B] selection:text-white overflow-x-hidden min-h-screen transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
