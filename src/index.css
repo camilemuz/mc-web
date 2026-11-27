@@ -43,6 +43,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
   }
   @media (prefers-reduced-motion: reduce) {
     html {
@@ -55,6 +56,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.25s ease, color 0.25s ease;
+    overflow-x: clip;
   }
   ::selection {
     background-color: var(--color-mc-red);
@@ -195,4 +197,13 @@ body[data-locked="true"] {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #E6002B;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

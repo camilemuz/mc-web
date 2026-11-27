@@ -57,7 +57,8 @@ import {
   ArrowLeft,
   Compass,
   Sun,
-  Moon
+  Moon,
+  Menu
 } from 'lucide-react';
 
 interface AdminCMSModalProps {
@@ -143,6 +144,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
   const [activeTab, setActiveTab] = useState<CMSTab>('hero');
   const [searchTerm, setSearchTerm] = useState('');
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Team & Marketing Access State (Firestore /admins collection)
   const [teamAdmins, setTeamAdmins] = useState<TeamAdminRecord[]>([]);
@@ -598,52 +600,74 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
       t.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const activeTabMeta = tabsConfig.find((t) => t.id === activeTab) || tabsConfig[0];
+
   return (
-    <div className="min-h-screen w-full bg-[#070709] text-white flex flex-col">
+    <div className="min-h-screen w-full max-w-full overflow-x-clip bg-[#070709] text-white flex flex-col">
+      {/* Floating Save Toast (never breaks header on mobile) */}
+      {savedNotice && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] max-w-[92vw] px-4 py-2 rounded-xl bg-emerald-950/95 border border-emerald-700 text-xs text-emerald-300 font-semibold flex items-center gap-2 shadow-2xl backdrop-blur-md">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="truncate">{savedNotice}</span>
+        </div>
+      )}
+
       {/* Top Header Bar */}
-      <header className="sticky top-0 z-40 px-4 sm:px-6 py-3 border-b border-neutral-800 flex items-center justify-between gap-4 bg-[#060608]/95 backdrop-blur-md shrink-0 shadow-lg">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-neutral-800 flex items-center justify-between gap-2 sm:gap-4 bg-[#060608]/95 backdrop-blur-md shrink-0 shadow-lg w-full">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {/* Mobile Navigation Drawer Toggle */}
           <button
+            type="button"
+            onClick={() => {
+              playUiClick();
+              setIsMobileNavOpen(true);
+            }}
+            className="lg:hidden w-9 h-9 rounded-lg bg-[#E6002B] hover:bg-[#c80025] text-white flex items-center justify-center shrink-0 cursor-pointer transition-all shadow-sm"
+            aria-label="Abrir menú de secciones"
+            title="Menú de secciones"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => {
               playUiClick();
               onClose();
             }}
-            className="px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-500 text-neutral-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-all shadow-sm"
+            className="hidden sm:flex px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-500 text-neutral-200 hover:text-white text-xs font-semibold items-center gap-1.5 cursor-pointer transition-all shadow-sm shrink-0"
             title="Volver a la Página Principal"
           >
             <ArrowLeft className="w-4 h-4 text-[#E6002B]" />
-            <span className="hidden sm:inline">Volver a la Web</span>
+            <span className="hidden md:inline">Volver a la Web</span>
           </button>
-          <div className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+
+          <div className="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
             <img
               src="/logo-mc-shield.png"
               alt="Escudo Oficial MC"
               className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(230,0,43,0.5)]"
             />
           </div>
-          <div>
+
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-bold font-display text-white">
-                PANEL ADMINISTRADOR & CMS TOTAL
+              <h3 className="text-sm sm:text-lg font-bold font-display text-white truncate">
+                <span className="sm:hidden">PANEL ADMIN CMS</span>
+                <span className="hidden sm:inline">PANEL ADMINISTRADOR & CMS TOTAL</span>
               </h3>
-              <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-[10px] font-bold text-emerald-400 uppercase hidden sm:inline-flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-800/60 text-[10px] font-bold text-emerald-400 uppercase hidden xl:inline-flex items-center gap-1 shrink-0">
                 <Shield className="w-2.5 h-2.5 text-emerald-400" />
-                <span>Página Dedicada</span>
+                <span>Tiempo Real</span>
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-neutral-400">
+            <p className="hidden md:block text-xs text-neutral-400 truncate">
               Edita textos, horarios, categorías, resultados, jugadores, noticias y mapa en tiempo real.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {savedNotice && (
-            <div className="px-3 py-1 rounded-lg bg-emerald-950/90 border border-emerald-800 text-xs text-emerald-400 flex items-center gap-1.5 animate-pulse">
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>{savedNotice}</span>
-            </div>
-          )}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -651,35 +675,37 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
               toggleTheme();
               triggerSaveNotification(theme === 'dark' ? 'Sitio web cambiado a Modo Claro' : 'Sitio web cambiado a Modo Oscuro');
             }}
-            className="px-3 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-500 text-neutral-200 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            className="w-9 h-9 sm:w-auto sm:px-3 sm:py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 hover:border-neutral-500 text-neutral-200 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
             title={theme === 'dark' ? 'Cambiar sitio web a Modo Claro' : 'Cambiar sitio web a Modo Oscuro'}
           >
             {theme === 'dark' ? (
               <>
-                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <Sun className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-400" />
                 <span className="hidden md:inline">Web: Claro</span>
               </>
             ) : (
               <>
-                <Moon className="w-3.5 h-3.5 text-sky-400" />
+                <Moon className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-sky-400" />
                 <span className="hidden md:inline">Web: Oscuro</span>
               </>
             )}
           </button>
           {onLogout && (
             <button
+              type="button"
               onClick={() => {
                 playUiClick();
                 onLogout();
               }}
-              className="px-3 py-1.5 bg-neutral-900 hover:bg-red-950/60 border border-neutral-700 hover:border-red-800 text-neutral-300 hover:text-red-300 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="w-9 h-9 sm:w-auto sm:px-3 sm:py-1.5 bg-neutral-900 hover:bg-red-950/60 border border-neutral-700 hover:border-red-800 text-neutral-300 hover:text-red-300 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
               title="Cerrar Sesión de Administrador"
             >
-              <LogOut className="w-3.5 h-3.5 text-red-400" />
-              <span className="hidden sm:inline">Cerrar Sesión</span>
+              <LogOut className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-red-400" />
+              <span className="hidden md:inline">Cerrar Sesión</span>
             </button>
           )}
           <button
+            type="button"
             onClick={() => {
               playUiClick();
               onClose();
@@ -692,11 +718,140 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
         </div>
       </header>
 
-      {/* Main Body: Sticky Sidebar + Native Scrolling Content */}
-      <div className="flex-1 flex flex-row">
+      {/* Mobile Quick Section Strip (< lg) */}
+      <div className="lg:hidden sticky top-[57px] z-30 bg-[#09090D]/95 backdrop-blur-md border-b border-neutral-800/80 px-3 py-2 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <activeTabMeta.icon className="w-4 h-4 text-[#E6002B] shrink-0" />
+            <span className="text-xs font-bold text-white truncate">{activeTabMeta.label}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              playUiClick();
+              setIsMobileNavOpen(true);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-700 text-[11px] font-semibold text-neutral-200 hover:text-white shrink-0 cursor-pointer"
+          >
+            Todas las secciones
+          </button>
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+          {tabsConfig.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  playUiClick();
+                  setActiveTab(tab.id);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#E6002B] text-white shadow-sm'
+                    : 'bg-neutral-900/90 text-neutral-400 border border-neutral-800 hover:text-white'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-[#E6002B]'}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Mobile Slide-Over Navigation Drawer */}
+      {isMobileNavOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden flex"
+          onClick={() => setIsMobileNavOpen(false)}
+        >
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-[82vw] max-w-[300px] h-full bg-[#060608] border-r border-neutral-800 flex flex-col shadow-2xl z-10"
+          >
+            <div className="p-3.5 border-b border-neutral-800 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <img src="/logo-mc-shield.png" alt="Club MC" className="w-7 h-7 object-contain" />
+                <span className="text-sm font-bold font-display text-white">SECCIONES CMS</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileNavOpen(false)}
+                className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 flex items-center justify-center cursor-pointer"
+                aria-label="Cerrar menú"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-3 border-b border-neutral-800/60 shrink-0">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Buscar sección..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-[#E6002B]"
+                />
+              </div>
+            </div>
+            <div className="p-2 overflow-y-auto flex-1 space-y-1">
+              {filteredTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => {
+                      playUiClick();
+                      setActiveTab(tab.id);
+                      setIsMobileNavOpen(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#E6002B] text-white shadow-md shadow-[#E6002B]/25'
+                        : 'text-neutral-300 hover:text-white hover:bg-neutral-900/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#E6002B]'}`} />
+                      <span className="truncate">{tab.label}</span>
+                    </div>
+                    {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-3 border-t border-neutral-800/80 bg-neutral-950/60 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  playUiClick();
+                  setIsMobileNavOpen(false);
+                  onClose();
+                }}
+                className="w-full py-2 px-3 rounded-lg bg-neutral-900 border border-neutral-700 text-xs font-semibold text-neutral-200 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#E6002B]" />
+                <span>Volver a la Web</span>
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Main Body: Desktop Sticky Sidebar + Full-Width Mobile Content */}
+      <div className="flex-1 flex flex-col lg:flex-row w-full min-w-0">
         
-        {/* Left Sidebar Navigation - Sticky */}
-        <aside className="w-64 sm:w-72 bg-[#060608] border-r border-neutral-800/80 shrink-0 sticky top-[61px] h-[calc(100vh-61px)] flex flex-col">
+        {/* Left Sidebar Navigation - Desktop Only (Sticky) */}
+        <aside className="hidden lg:flex w-64 xl:w-72 bg-[#060608] border-r border-neutral-800/80 shrink-0 sticky top-[61px] h-[calc(100vh-61px)] flex-col">
           {/* Search Filter */}
           <div className="p-3 border-b border-neutral-800/60 shrink-0">
             <div className="relative">
@@ -719,6 +874,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
               return (
                 <button
                   key={tab.id}
+                  type="button"
                   onClick={() => {
                     playUiClick();
                     setActiveTab(tab.id);
@@ -730,11 +886,11 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-900/80'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#E6002B]'}`} />
-                    <span>{tab.label}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#E6002B]'}`} />
+                    <span className="truncate">{tab.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/80" />}
+                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />}
                 </button>
               );
             })}
@@ -753,12 +909,12 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
         </aside>
 
         {/* Right Main Content Pane - Native Window Scroll */}
-        <main className="flex-1 min-w-0 p-4 sm:p-8 bg-[#0B0B0E] space-y-6">
+        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 bg-[#0B0B0E] space-y-6 overflow-x-hidden">
 
             {/* TAB 1: HERO & PORTADA */}
             {activeTab === 'hero' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       1. Titular Principal & Palabras Clave
@@ -1191,7 +1347,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 2: SEDE & HORARIOS (BAJO SEGUENCOMA) */}
             {activeTab === 'location' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Sede Oficial de Entrenamiento & Horarios
@@ -1338,7 +1494,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 3: CATEGORÍAS & PLANTELES */}
             {activeTab === 'squads' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Planteles y Categorías Formativas ({content.squads.length})
@@ -1456,7 +1612,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 4: MATCH CENTER EN VIVO */}
             {activeTab === 'match' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Match Center: Marcador & Incidencias en Vivo
@@ -2358,7 +2514,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB: METODOLOGÍA */}
             {activeTab === 'method' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-xl font-bold font-display text-white flex items-center gap-2">
                       <Layers className="w-5 h-5 text-[#E6002B]" />
@@ -2488,7 +2644,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 5: MEMBRESÍAS & CUOTAS */}
             {activeTab === 'memberships' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Membresías & Planes Formativos en Bolivianos (Bs.)
@@ -2612,7 +2768,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 6: CUERPO TÉCNICO (STAFF) */}
             {activeTab === 'staff' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Cuerpo Técnico y Entrenadores ({content.staff.length})
@@ -2700,7 +2856,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 7: PREGUNTAS FRECUENTES (FAQ) */}
             {activeTab === 'faq' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Preguntas Frecuentes ({content.faq.length})
@@ -2783,7 +2939,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 8: TIENDA 3D & STOCK */}
             {activeTab === 'store' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Catálogo de la Tienda Oficial en Bolivianos (Bs.)
@@ -3150,7 +3306,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 9: LEADS & ALUMNOS PROSPECTOS */}
             {activeTab === 'leads' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Registro de Prospectos de la Escuela ({leads.length})
@@ -3212,7 +3368,7 @@ export const AdminCMSModal: React.FC<AdminCMSModalProps> = ({
             {/* TAB 10: BACKUP & RESTAURACIÓN JSON */}
             {activeTab === 'backup' && (
               <div className="space-y-6 max-w-4xl">
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-800">
                   <div>
                     <h4 className="text-lg font-bold font-display text-white">
                       Copia de Seguridad & Restauración Total
